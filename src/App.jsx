@@ -1,0 +1,29 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import SendDocument from './pages/SendDocument';
+import SignatureList from './pages/SignatureList';
+import SignatureDetail from './pages/SignatureDetail';
+import SignPage from './pages/SignPage';
+import NotFound from './pages/NotFound';
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/firmar/:token" element={<SignPage />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/enviar" element={<ProtectedRoute><SendDocument /></ProtectedRoute>} />
+          <Route path="/firmas" element={<ProtectedRoute><SignatureList /></ProtectedRoute>} />
+          <Route path="/firmas/:id" element={<ProtectedRoute><SignatureDetail /></ProtectedRoute>} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
