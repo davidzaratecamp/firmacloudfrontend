@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { Document, Page, pdfjs } from 'react-pdf';
 import DrawPad from '../components/DrawPad';
 import { getSigningPage, recordView, submitSignature } from '../api/signatures';
 import { CheckCircle, RotateCcw, PenLine, Loader2, AlertCircle, FileSignature, ExternalLink } from 'lucide-react';
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -23,6 +29,8 @@ export default function SignPage() {
   const [pdfUrl, setPdfUrl]         = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError]     = useState(false);
+  const [numPages, setNumPages]     = useState(null);
+  const pdfContainerRef             = useRef(null);
 
   // Fetch PDF as blob to avoid cross-origin iframe restrictions
   const loadPdf = useCallback(async () => {
@@ -190,12 +198,38 @@ export default function SignPage() {
               )}
 
               {!pdfLoading && !pdfError && pdfUrl && (
-                <iframe
-                  src={pdfUrl}
-                  className="w-full rounded-lg border border-gray-200"
+                <div
+                  ref={pdfContainerRef}
+                  className="overflow-y-auto rounded-lg border border-gray-200 bg-gray-50"
                   style={{ height: '60vh' }}
-                  title="Documento para firmar"
-                />
+                >
+                  <Document
+                    file={pdfUrl}
+                    onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                    loading={
+                      <div className="flex items-center justify-center h-40">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                      </div>
+                    }
+                    error={
+                      <div className="flex flex-col items-center justify-center h-40 gap-2">
+                        <AlertCircle className="h-6 w-6 text-amber-500" />
+                        <p className="text-sm text-gray-500">No se pudo renderizar el documento</p>
+                      </div>
+                    }
+                  >
+                    {Array.from({ length: numPages || 0 }, (_, i) => (
+                      <Page
+                        key={i + 1}
+                        pageNumber={i + 1}
+                        width={pdfContainerRef.current?.clientWidth || undefined}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                        className="mb-1"
+                      />
+                    ))}
+                  </Document>
+                </div>
               )}
 
               <div className="mt-4 flex items-center justify-between">
