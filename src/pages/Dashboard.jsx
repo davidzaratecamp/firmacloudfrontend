@@ -19,8 +19,21 @@ function StatCard({ label, value, icon: Icon, color }) {
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
 
-  useEffect(() => { getDashboard().then(r => setData(r.data)); }, []);
+  useEffect(() => {
+    getDashboard()
+      .then(r => setData(r.data))
+      .catch(() => setError('No se pudo cargar el dashboard. Intenta recargar la página.'));
+  }, []);
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6 text-sm">{error}</div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

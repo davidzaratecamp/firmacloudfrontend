@@ -9,6 +9,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 export default function SignPage() {
   const { token } = useParams();
   const sigCanvasRef = useRef(null);  // DrawPad ref
+  const pdfUrlRef   = useRef(null);   // tracks current blob URL for cleanup
 
   const [pageData, setPageData]     = useState(null);
   const [loading, setLoading]       = useState(true);
@@ -20,7 +21,7 @@ export default function SignPage() {
   const [hasSignature, setHasSignature] = useState(false);
   const [step, setStep]             = useState('review');
   const [pdfUrl, setPdfUrl]         = useState(null);
-  const [pdfLoading, setPdfLoading] = useState(false);  
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError]     = useState(false);
 
   // Fetch PDF as blob to avoid cross-origin iframe restrictions
@@ -31,7 +32,9 @@ export default function SignPage() {
       const res = await fetch(`${API}/sign/${token}/document`);
       if (!res.ok) throw new Error('No se pudo cargar el documento');
       const blob = await res.blob();
+      if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current);
       const url = URL.createObjectURL(blob);
+      pdfUrlRef.current = url;
       setPdfUrl(url);
     } catch {
       setPdfError(true);
@@ -61,7 +64,7 @@ export default function SignPage() {
       .catch(err => setError(err.response?.data?.error || 'Enlace no válido o expirado'))
       .finally(() => setLoading(false));
 
-    return () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl); };
+    return () => { if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current); };
   }, [token]);
 
   const handleClear = () => {
