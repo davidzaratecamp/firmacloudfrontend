@@ -8,10 +8,7 @@ import {
   Loader2, AlertCircle, FileSignature, ExternalLink, ShieldCheck,
 } from 'lucide-react';
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
