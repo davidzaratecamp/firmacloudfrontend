@@ -52,11 +52,22 @@ export default function SignPage() {
         loadPdf();
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
-            pos => setGeolocation({
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-            }),
+            async pos => {
+              const geo = {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+              };
+              try {
+                const r = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${geo.latitude}&longitude=${geo.longitude}&localityLanguage=es`
+                );
+                const data = await r.json();
+                const parts = [data.city || data.locality, data.principalSubdivision, data.countryName].filter(Boolean);
+                if (parts.length) geo.locationName = parts.join(', ');
+              } catch {}
+              setGeolocation(geo);
+            },
             () => {}
           );
         }
