@@ -27,6 +27,8 @@ export default function SignPage() {
   const [success, setSuccess]         = useState(false);
   const [geolocation, setGeolocation] = useState(null);
   const [hasSignature, setHasSignature] = useState(false);
+  const [ersdAccepted, setErsdAccepted] = useState(false);
+  const [showErsd, setShowErsd]         = useState(false);
   const [step, setStep]               = useState('document');
   const [pdfUrl, setPdfUrl]           = useState(null);
   const [pdfLoading, setPdfLoading]   = useState(false);
@@ -97,7 +99,7 @@ export default function SignPage() {
     setSubmitting(true);
     try {
       const signatureDataUrl = sigCanvasRef.current.toDataURL('image/png');
-      await submitSignature(token, { signatureDataUrl, signerName: signerName.trim(), geolocation });
+      await submitSignature(token, { signatureDataUrl, signerName: signerName.trim(), geolocation, ersdAccepted: true });
       setSuccess(true);
     } catch (err) {
       setSubmitError(err.response?.data?.error || 'Error al enviar la firma. Intenta de nuevo.');
@@ -154,7 +156,7 @@ export default function SignPage() {
 
   // ── UI principal ──────────────────────────────────────────────────────────
 
-  const canSubmit = signerName.trim() && hasSignature;
+  const canSubmit = signerName.trim() && hasSignature && ersdAccepted;
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-50 overflow-hidden">
@@ -324,6 +326,41 @@ export default function SignPage() {
               <p className="text-xs text-amber-800 leading-relaxed">
                 Al firmar, acepta que su firma digital tiene la misma validez legal que una firma manuscrita y que ha leído el documento.
               </p>
+            </div>
+
+            {/* ERSD Acceptance */}
+            <div className="border border-gray-200 rounded-xl overflow-hidden">
+              <div className="flex items-start gap-3 p-3.5 bg-white">
+                <input
+                  type="checkbox"
+                  id="ersd"
+                  checked={ersdAccepted}
+                  onChange={e => setErsdAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-blue-600 flex-none cursor-pointer"
+                />
+                <label htmlFor="ersd" className="text-xs text-gray-700 leading-relaxed cursor-pointer">
+                  <span className="font-semibold">I agree to use electronic records and signatures.</span>{' '}
+                  I have reviewed and accept the{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowErsd(v => !v)}
+                    className="text-blue-600 underline"
+                  >
+                    Electronic Record and Signature Disclosure
+                  </button>
+                  {' '}and consent to sign documents electronically.
+                </label>
+              </div>
+              {showErsd && (
+                <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 max-h-44 overflow-y-auto text-xs text-gray-600 space-y-2.5">
+                  <p className="font-semibold text-gray-800">ELECTRONIC RECORD AND SIGNATURE DISCLOSURE — Asiste Health Care</p>
+                  <p>Asiste Health Care may be required by law to provide you certain written notices or disclosures electronically through the FirmaCloud system.</p>
+                  <p><span className="font-medium">Getting paper copies:</span> At any time, you may request a paper copy of any record provided electronically by contacting admin@asistehealth.com.</p>
+                  <p><span className="font-medium">Withdrawing your consent:</span> You may at any time request to receive notices in paper format by emailing admin@asistehealth.com with your full name, email, and mailing address.</p>
+                  <p><span className="font-medium">Legal effect:</span> Your electronic signature has the same legal effect as a handwritten signature under the U.S. Electronic Signatures in Global and National Commerce Act (E-SIGN Act) and the Uniform Electronic Transactions Act (UETA).</p>
+                  <p><span className="font-medium">Contact:</span> admin@asistehealth.com</p>
+                </div>
+              )}
             </div>
 
             {/* Error de envío */}
