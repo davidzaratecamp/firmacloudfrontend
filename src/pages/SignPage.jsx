@@ -320,14 +320,6 @@ export default function SignPage() {
               </p>
             </div>
 
-            {/* Aviso legal */}
-            <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl p-3">
-              <ShieldCheck className="h-4 w-4 text-amber-500 flex-none mt-0.5" />
-              <p className="text-xs text-amber-800 leading-relaxed">
-                Al firmar, acepta que su firma digital tiene la misma validez legal que una firma manuscrita y que ha leído el documento.
-              </p>
-            </div>
-
             {/* ERSD Acceptance */}
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="flex items-start gap-3 p-3.5 bg-white">
@@ -361,6 +353,14 @@ export default function SignPage() {
                   <p><span className="font-medium">Contact:</span> admin@asistehealth.com</p>
                 </div>
               )}
+            </div>
+
+            {/* Aviso legal */}
+            <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl p-3">
+              <ShieldCheck className="h-4 w-4 text-amber-500 flex-none mt-0.5" />
+              <p className="text-xs text-amber-800 leading-relaxed">
+                Al firmar, acepta que su firma digital tiene la misma validez legal que una firma manuscrita y que ha leído el documento.
+              </p>
             </div>
 
             {/* Error de envío */}
