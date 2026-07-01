@@ -10,8 +10,39 @@ const CHANNELS = [
   { value: 'both',     label: 'Email + WhatsApp', icon: null          },
 ];
 
+const COUNTRY_CODES = [
+  { code: '+57', country: 'CO', label: '🇨🇴 +57 Colombia' },
+  { code: '+1',  country: 'US', label: '🇺🇸 +1 Estados Unidos' },
+  { code: '+1',  country: 'CA', label: '🇨🇦 +1 Canadá' },
+  { code: '+52', country: 'MX', label: '🇲🇽 +52 México' },
+  { code: '+54', country: 'AR', label: '🇦🇷 +54 Argentina' },
+  { code: '+56', country: 'CL', label: '🇨🇱 +56 Chile' },
+  { code: '+51', country: 'PE', label: '🇵🇪 +51 Perú' },
+  { code: '+593', country: 'EC', label: '🇪🇨 +593 Ecuador' },
+  { code: '+58', country: 'VE', label: '🇻🇪 +58 Venezuela' },
+  { code: '+507', country: 'PA', label: '🇵🇦 +507 Panamá' },
+  { code: '+506', country: 'CR', label: '🇨🇷 +506 Costa Rica' },
+  { code: '+502', country: 'GT', label: '🇬🇹 +502 Guatemala' },
+  { code: '+503', country: 'SV', label: '🇸🇻 +503 El Salvador' },
+  { code: '+504', country: 'HN', label: '🇭🇳 +504 Honduras' },
+  { code: '+505', country: 'NI', label: '🇳🇮 +505 Nicaragua' },
+  { code: '+591', country: 'BO', label: '🇧🇴 +591 Bolivia' },
+  { code: '+595', country: 'PY', label: '🇵🇾 +595 Paraguay' },
+  { code: '+598', country: 'UY', label: '🇺🇾 +598 Uruguay' },
+  { code: '+1', country: 'DO', label: '🇩🇴 +1 República Dominicana' },
+  { code: '+34', country: 'ES', label: '🇪🇸 +34 España' },
+  { code: '+44', country: 'GB', label: '🇬🇧 +44 Reino Unido' },
+  { code: '+33', country: 'FR', label: '🇫🇷 +33 Francia' },
+  { code: '+49', country: 'DE', label: '🇩🇪 +49 Alemania' },
+  { code: '+39', country: 'IT', label: '🇮🇹 +39 Italia' },
+  { code: '+55', country: 'BR', label: '🇧🇷 +55 Brasil' },
+  { code: '+86', country: 'CN', label: '🇨🇳 +86 China' },
+  { code: '+91', country: 'IN', label: '🇮🇳 +91 India' },
+];
+
 export default function SendDocument() {
   const [form, setForm] = useState({ clientName: '', clientEmail: '', clientPhone: '', sendChannel: 'email' });
+  const [countryCode, setCountryCode] = useState('+57');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError]     = useState('');
@@ -26,7 +57,10 @@ export default function SendDocument() {
     setError('');
     setLoading(true);
     try {
-      await sendDocument(form);
+      const payload = needsPhone
+        ? { ...form, clientPhone: `${countryCode}${form.clientPhone.replace(/\D/g, '')}` }
+        : form;
+      await sendDocument(payload);
       setSuccess(true);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al enviar el documento');
@@ -46,7 +80,7 @@ export default function SendDocument() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Documento Enviado!</h2>
           <p className="text-gray-500 mb-1">Enviado a <strong>{form.clientName}</strong> por <strong>{ch?.label}</strong></p>
           {form.clientEmail && <p className="text-sm text-gray-400">{form.clientEmail}</p>}
-          {form.clientPhone && <p className="text-sm text-gray-400">{form.clientPhone}</p>}
+          {form.clientPhone && <p className="text-sm text-gray-400">{countryCode}{form.clientPhone.replace(/\D/g, '')}</p>}
           <div className="flex gap-3 justify-center mt-6">
             <button
               onClick={() => { setSuccess(false); setForm({ clientName: '', clientEmail: '', clientPhone: '', sendChannel: form.sendChannel }); }}
@@ -129,12 +163,23 @@ export default function SendDocument() {
             {needsPhone && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Número de WhatsApp * <span className="text-xs text-gray-400">(con código de país)</span>
+                  Número de WhatsApp * <span className="text-xs text-gray-400">(elige el código de país)</span>
                 </label>
-                <input name="clientPhone" value={form.clientPhone} onChange={handleChange} required={needsPhone}
-                  placeholder="3001234567 o +573001234567"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <p className="text-xs text-gray-400 mt-1">Colombia: 10 dígitos (3XXXXXXXXX) o con +57</p>
+                <div className="flex gap-2">
+                  <select
+                    value={countryCode}
+                    onChange={e => setCountryCode(e.target.value)}
+                    className="w-40 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    {COUNTRY_CODES.map(c => (
+                      <option key={c.country} value={c.code}>{c.label}</option>
+                    ))}
+                  </select>
+                  <input name="clientPhone" value={form.clientPhone} onChange={handleChange} required={needsPhone}
+                    placeholder="3001234567"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Solo el número, sin el código de país (se agrega automáticamente)</p>
               </div>
             )}
 
