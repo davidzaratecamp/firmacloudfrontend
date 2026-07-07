@@ -1,51 +1,59 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
 import DrawPad from '../components/DrawPad';
 import { getSigningPage, recordView, submitSignature } from '../api/signatures';
 import {
   CheckCircle, RotateCcw, ArrowRight, ArrowLeft,
   Loader2, AlertCircle, FileSignature, ExternalLink, ShieldCheck,
 } from 'lucide-react';
+import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+// WhatsApp URL parser appends trailing text (e.g. " Gracias.") — extract only the leading hex block.
+function extractToken(raw) {
+  const m = (raw || '').match(/^[a-f0-9]+/i);
+  return m ? m[0] : raw || '';
+}
+
 export default function SignPage() {
-  const { token } = useParams();
+  const { token: rawToken } = useParams();
+  const token = extractToken(rawToken);
   const sigCanvasRef    = useRef(null);
-  const pdfUrlRef       = useRef(null);
   const pdfContainerRef = useRef(null);
 
-  const [pageData, setPageData]       = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [initError, setInitError]     = useState('');
-  const [submitError, setSubmitError] = useState('');
-  const [signerName, setSignerName]   = useState('');
-  const [submitting, setSubmitting]   = useState(false);
-  const [success, setSuccess]         = useState(false);
-  const [geolocation, setGeolocation] = useState(null);
+  const [pageData, setPageData]         = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [initError, setInitError]       = useState('');
+  const [submitError, setSubmitError]   = useState('');
+  const [signerName, setSignerName]     = useState('');
+  const [submitting, setSubmitting]     = useState(false);
+  const [success, setSuccess]           = useState(false);
+  const [geolocation, setGeolocation]   = useState(null);
   const [hasSignature, setHasSignature] = useState(false);
   const [ersdAccepted, setErsdAccepted] = useState(false);
   const [showErsd, setShowErsd]         = useState(false);
-  const [step, setStep]               = useState('document');
-  const [pdfUrl, setPdfUrl]           = useState(null);
-  const [pdfLoading, setPdfLoading]   = useState(false);
-  const [pdfError, setPdfError]       = useState(false);
-  const [numPages, setNumPages]       = useState(null);
+  const [step, setStep]                 = useState('document');
+  const [pdfData, setPdfData]           = useState(null);
+  const [pdfLoading, setPdfLoading]     = useState(false);
+  const [pdfError, setPdfError]         = useState(false);
+  const [numPages, setNumPages]         = useState(null);
 
+  const pdfFile = useMemo(() => (pdfData ? { data: pdfData } : null), [pdfData]);
+
+  // Solo se usa en el botón de reintento del error UI
   const loadPdf = useCallback(async () => {
     setPdfLoading(true);
     setPdfError(false);
     try {
       const res = await fetch(`${API}/sign/${token}/document`);
       if (!res.ok) throw new Error();
-      const blob = await res.blob();
-      if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current);
-      const url = URL.createObjectURL(blob);
-      pdfUrlRef.current = url;
-      setPdfUrl(url);
+      const buffer = await res.arrayBuffer();
+      setPdfData(new Uint8Array(buffer));
     } catch {
       setPdfError(true);
     } finally {
@@ -54,38 +62,61 @@ export default function SignPage() {
   }, [token]);
 
   useEffect(() => {
+    // 'cancelled' evita que el resultado de la primera invocación (StrictMode)
+    // actualice el estado cuando el effect se desmonta y remonta.
+    let cancelled = false;
+
     getSigningPage(token)
-      .then(r => {
+      .then(async r => {
+        if (cancelled) return;
         setPageData(r.data);
         setSignerName(r.data.clientName);
         recordView(token).catch(() => {});
-        loadPdf();
+
+        // Cargar PDF inline con guarda de cancelación
+        setPdfLoading(true);
+        try {
+          const res = await fetch(`${API}/sign/${token}/document`);
+          if (!res.ok) throw new Error();
+          const buffer = await res.arrayBuffer();
+          if (!cancelled) setPdfData(new Uint8Array(buffer));
+        } catch {
+          if (!cancelled) setPdfError(true);
+        } finally {
+          if (!cancelled) setPdfLoading(false);
+        }
+
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             async pos => {
+              if (cancelled) return;
               const geo = {
                 latitude: pos.coords.latitude,
                 longitude: pos.coords.longitude,
                 accuracy: pos.coords.accuracy,
               };
               try {
-                const r = await fetch(
+                const geoRes = await fetch(
                   `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${geo.latitude}&longitude=${geo.longitude}&localityLanguage=es`
                 );
-                const data = await r.json();
+                const data = await geoRes.json();
                 const parts = [data.city || data.locality, data.principalSubdivision, data.countryName].filter(Boolean);
                 if (parts.length) geo.locationName = parts.join(', ');
               } catch {}
-              setGeolocation(geo);
+              if (!cancelled) setGeolocation(geo);
             },
             () => {}
           );
         }
       })
-      .catch(err => setInitError(err.response?.data?.error || 'Enlace no válido o expirado'))
-      .finally(() => setLoading(false));
+      .catch(err => {
+        if (!cancelled) setInitError(err.response?.data?.error || 'Enlace no válido o expirado');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    return () => { if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current); };
+    return () => { cancelled = true; };
   }, [token]);
 
   const handleClear = () => {
@@ -214,6 +245,7 @@ export default function SignPage() {
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium"
+                  onClick={loadPdf}
                 >
                   <ExternalLink className="h-4 w-4" />
                   Abrir en nueva pestaña
@@ -221,10 +253,11 @@ export default function SignPage() {
               </div>
             )}
 
-            {!pdfLoading && !pdfError && pdfUrl && (
+            {!pdfLoading && !pdfError && pdfData && (
               <Document
-                file={pdfUrl}
+                file={pdfFile}
                 onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                onLoadError={(err) => console.error('[react-pdf] load error:', err)}
                 loading={
                   <div className="flex items-center justify-center py-20">
                     <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
@@ -243,7 +276,7 @@ export default function SignPage() {
                     pageNumber={i + 1}
                     width={pdfContainerRef.current?.clientWidth || window.innerWidth}
                     renderTextLayer={false}
-                    renderAnnotationLayer={false}
+                    renderAnnotationLayer={true}
                   />
                 ))}
               </Document>
@@ -252,10 +285,11 @@ export default function SignPage() {
 
           {/* Footer fijo — botón de continuar */}
           <div className="flex-none bg-white border-t border-gray-200 px-4 flex items-center justify-between" style={{ height: 64 }}>
-            {pdfUrl && (
+            {pdfData && (
               <a
-                href={pdfUrl}
-                download={pageData?.documentName}
+                href={`${API}/sign/${token}/document`}
+                target="_blank"
+                rel="noreferrer"
                 className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors"
               >
                 <ExternalLink className="h-4 w-4" />
