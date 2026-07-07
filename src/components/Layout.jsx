@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X } from 'lucide-react';
+import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox } from 'lucide-react';
 
 const NAV = [
-  { to: '/dashboard',  label: 'Dashboard',        icon: LayoutDashboard },
-  { to: '/enviar',     label: 'Enviar Documento',  icon: SendHorizontal  },
-  { to: '/firmas',     label: 'Firmas',            icon: FileText        },
+  { to: '/dashboard',    label: 'Dashboard',        icon: LayoutDashboard },
+  { to: '/enviar',       label: 'Enviar Documento',  icon: SendHorizontal  },
+  { to: '/firmas',       label: 'Firmas',            icon: FileText        },
+  { to: '/enviar-carta', label: 'Enviar Carta',      icon: MailPlus        },
+  { to: '/cartas',       label: 'Cartas',            icon: Inbox           },
 ];
 
 export default function Layout({ children }) {
