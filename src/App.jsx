@@ -11,6 +11,9 @@ import SendCarta from './pages/SendCarta';
 import CartaList from './pages/CartaList';
 import CartaDetail from './pages/CartaDetail';
 import FormularioPublico from './pages/FormularioPublico';
+import OleadaList from './pages/OleadaList';
+import OleadaCreate from './pages/OleadaCreate';
+import OleadaDetail from './pages/OleadaDetail';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -28,6 +31,9 @@ export default function App() {
           <Route path="/enviar-carta" element={<ProtectedRoute><SendCarta /></ProtectedRoute>} />
           <Route path="/cartas" element={<ProtectedRoute><CartaList /></ProtectedRoute>} />
           <Route path="/cartas/:id" element={<ProtectedRoute><CartaDetail /></ProtectedRoute>} />
+          <Route path="/oleadas" element={<ProtectedRoute><OleadaList /></ProtectedRoute>} />
+          <Route path="/oleadas/nueva" element={<ProtectedRoute><OleadaCreate /></ProtectedRoute>} />
+          <Route path="/oleadas/:id" element={<ProtectedRoute><OleadaDetail /></ProtectedRoute>} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
