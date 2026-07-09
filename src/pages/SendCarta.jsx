@@ -1,33 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sendCarta } from '../api/cartas';
+import { NPNS } from '../constants/npns';
 import Layout from '../components/Layout';
 import {
   Send, CheckCircle, Loader2, Mail, MessageCircle,
   UserPlus, X, AlertCircle, ChevronDown, Users,
 } from 'lucide-react';
-
-const NPNS = [
-  { name: 'Elaine Alfaro',      code: '21078842' },
-  { name: 'Edislandy Agusti',   code: '20862589' },
-  { name: 'Isser Milan',        code: '20770815' },
-  { name: 'Jorge Otavo',        code: '18785248' },
-  { name: 'Greter Ercia',       code: '20879699' },
-  { name: 'Annalie Castañeda',  code: '21256731' },
-  { name: 'Damaris Bueno',      code: '20782885' },
-  { name: 'Dahanna Serrano',    code: '18818901' },
-  { name: 'Daniel Ruiz',        code: '20694211' },
-  { name: 'Katerine Chirino',   code: '20765207' },
-  { name: 'Leonardo Pozo',      code: '20859576' },
-  { name: 'Oscar Santana',      code: '20857738' },
-  { name: 'Rosangela Santana',  code: '19835506' },
-  { name: 'Josthin Hernandez',  code: '20823253' },
-  { name: 'Alain Oropesa',      code: '21534963' },
-  { name: 'Lazaro Quiros',      code: '21078848' },
-  { name: 'Melanie Granados',   code: '20983729' },
-  { name: 'Carlos Cruz Bracho', code: '21055635' },
-  { name: 'Ernesto Redonet',    code: '20723679' },
-];
 
 const CHANNELS = [
   { value: 'email',    label: 'Email',           icon: Mail          },
