@@ -7,7 +7,7 @@ import {
 import Layout from '../components/Layout';
 import {
   ArrowLeft, FileText, Send, Loader2, Clock, MailOpen, PenLine,
-  AlertTriangle, PauseCircle, PlayCircle, XCircle,
+  AlertTriangle, PauseCircle, PlayCircle, XCircle, RefreshCw,
 } from 'lucide-react';
 
 const OLEADA_STATUS_BADGE = {
@@ -61,17 +61,27 @@ export default function OleadaDetail() {
   const [recipients, setRecipients] = useState({ data: [], total: 0 });
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadOleada = useCallback(() => {
-    getOleada(id).then(r => setOleada(r.data)).catch(() => setError('No se pudo cargar la oleada'));
+    return getOleada(id).then(r => setOleada(r.data)).catch(() => setError('No se pudo cargar la oleada'));
   }, [id]);
 
   const loadRecipients = useCallback(() => {
-    listOleadaRecipients(id, { filter: filter || undefined, page, limit: 20 }).then(r => setRecipients(r.data));
+    return listOleadaRecipients(id, { filter: filter || undefined, page, limit: 20 }).then(r => setRecipients(r.data));
   }, [id, filter, page]);
 
   useEffect(() => { loadOleada(); }, [loadOleada]);
   useEffect(() => { loadRecipients(); }, [loadRecipients]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([loadOleada(), loadRecipients()]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (error) return <Layout><div className="text-center py-16 text-red-500">{error}</div></Layout>;
   if (!oleada) {
@@ -123,6 +133,13 @@ export default function OleadaDetail() {
             <ArrowLeft className="h-4 w-4 text-gray-600" />
           </button>
           <h1 className="text-xl font-bold text-gray-900 flex-1">{oleada.name}</h1>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> Refrescar
+          </button>
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.cls}`}>
             {badge.label}
           </span>
@@ -228,8 +245,13 @@ export default function OleadaDetail() {
           <div className="divide-y divide-gray-50">
             {recipients.data.map(r => {
               const state = recipientState(r);
+              const clickable = Boolean(r.signature_request_id);
               return (
-                <div key={r.id} className="flex items-center justify-between p-4">
+                <div
+                  key={r.id}
+                  onClick={clickable ? () => navigate(`/cartas/${r.signature_request_id}`) : undefined}
+                  className={`flex items-center justify-between p-4 ${clickable ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
+                >
                   <div className="flex items-center gap-3">
                     {ROW_ICON[state]}
                     <div>
@@ -240,7 +262,10 @@ export default function OleadaDetail() {
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400">{fmt(r.sent_at)}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs text-gray-400">{fmt(r.sent_at)}</p>
+                    {clickable && <span className="text-xs text-blue-600 font-medium">Ver carta →</span>}
+                  </div>
                 </div>
               );
             })}
