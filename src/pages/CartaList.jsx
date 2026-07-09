@@ -1,8 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { listCartas } from '../api/cartas';
+import { listCartas, exportCartas } from '../api/cartas';
 import Layout from '../components/Layout';
-import { Search, ChevronRight, Mail, MailOpen, PenLine, Clock } from 'lucide-react';
+import Modal from '../components/Modal';
+import { Search, ChevronRight, Mail, MailOpen, PenLine, Clock, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react';
+
+const LIMIT = 20;
 
 const STATUS_OPTIONS = ['', 'pending', 'viewed', 'signed', 'expired'];
 const STATUS_LABELS  = {
@@ -40,15 +43,49 @@ export default function CartaList() {
   const [data, setData]     = useState({ data: [], total: 0 });
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo]     = useState('');
   const [page, setPage]     = useState(1);
 
+  const [exportOpen, setExportOpen]     = useState(false);
+  const [exporting, setExporting]       = useState(false);
+  const [refreshing, setRefreshing]     = useState(false);
+
   const load = useCallback(() => {
-    listCartas({ search, status, page, limit: 15 }).then(r => setData(r.data));
-  }, [search, status, page]);
+    return listCartas({ search, status, dateFrom, dateTo, page, limit: LIMIT }).then(r => setData(r.data));
+  }, [search, status, dateFrom, dateTo, page]);
 
   useEffect(() => { load(); }, [load]);
 
-  const totalPages = Math.ceil(data.total / 15);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const totalPages = Math.ceil(data.total / LIMIT);
+
+  const activeFilters = [
+    status && `Estado: ${STATUS_LABELS[status]}`,
+    search && `Búsqueda: "${search}"`,
+    dateFrom && `Desde: ${dateFrom}`,
+    dateTo && `Hasta: ${dateTo}`,
+  ].filter(Boolean);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportCartas({ search, status, dateFrom, dateTo });
+      setExportOpen(false);
+    } catch {
+      alert('No se pudo generar el Excel');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <Layout>
@@ -79,6 +116,35 @@ export default function CartaList() {
               </button>
             ))}
           </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-500">Desde</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => { setDateFrom(e.target.value); setPage(1); }}
+              className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <label className="text-xs text-gray-500">Hasta</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => { setDateTo(e.target.value); setPage(1); }}
+              className="px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> Refrescar
+          </button>
+          <button
+            onClick={() => setExportOpen(true)}
+            className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5" /> Exportar Excel
+          </button>
         </div>
 
         {/* Lista */}
@@ -142,6 +208,31 @@ export default function CartaList() {
           </div>
         )}
       </div>
+
+      <Modal open={exportOpen} onClose={() => setExportOpen(false)} title="Exportar a Excel">
+        <div className="space-y-4">
+          {activeFilters.length > 0 ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              <p className="font-medium mb-1">Se exportarán los registros con estos filtros:</p>
+              <ul className="text-xs space-y-0.5">
+                {activeFilters.map((f, i) => <li key={i}>· {f}</li>)}
+              </ul>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-600">
+              No hay filtros activos — se exportarán <strong>todos</strong> los registros ({data.total} en total).
+            </div>
+          )}
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+          >
+            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+            {exporting ? 'Generando...' : 'Descargar Excel'}
+          </button>
+        </div>
+      </Modal>
     </Layout>
   );
 }

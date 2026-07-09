@@ -44,12 +44,12 @@ export default function OleadaList() {
   const navigate = useNavigate();
 
   const load = useCallback(() => {
-    listOleadas({ search, status, page, limit: 15 }).then(r => setData(r.data));
+    listOleadas({ search, status, page, limit: 20 }).then(r => setData(r.data));
   }, [search, status, page]);
 
   useEffect(() => { load(); }, [load]);
 
-  const totalPages = Math.ceil(data.total / 15);
+  const totalPages = Math.ceil(data.total / 20);
 
   return (
     <Layout>
