@@ -24,3 +24,9 @@ export async function downloadFile(url, filename) {
 export const downloadSigned      = (id, name) => downloadFile(`/signatures/${id}/download`, `FIRMADO-${name}`);
 export const downloadCertificate = (id)        => downloadFile(`/signatures/${id}/certificate`, `sumarium-${id}.pdf`);
 export const deleteSignature     = (id)        => api.delete(`/signatures/${id}`);
+
+export const replaceSignedDocument = (id, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.put(`/signatures/${id}/replace-signed`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+};
