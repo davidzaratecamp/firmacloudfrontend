@@ -82,16 +82,29 @@ const DrawPad = forwardRef(function DrawPad({ onEnd, signerName = '' }, ref) {
   const renderFont = useCallback(async (fontFamily, text) => {
     const canvas = fontCanvasRef.current;
     if (!canvas || !text) return;
-    await document.fonts.load(`600 52px '${fontFamily}'`);
+    const BASE_SIZE = 52;
+    const MIN_SIZE  = 20;
+    const PADDING   = 20; // margen horizontal a cada lado, evita que el texto toque el borde
+    await document.fonts.load(`600 ${BASE_SIZE}px '${fontFamily}'`);
     const ctx = canvas.getContext('2d');
     canvas.width  = 400;
     canvas.height = 120;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font         = `600 52px '${fontFamily}'`;
+
+    // Auto-ajuste: si el texto no cabe a tamaño base, reducir el fontSize
+    // proporcionalmente (con piso en MIN_SIZE) para que nunca quede recortado.
+    const maxWidth = canvas.width - PADDING * 2;
+    ctx.font = `600 ${BASE_SIZE}px '${fontFamily}'`;
+    const baseWidth = ctx.measureText(text).width;
+    const fontSize = baseWidth > maxWidth
+      ? Math.max(MIN_SIZE, Math.floor(BASE_SIZE * (maxWidth / baseWidth)))
+      : BASE_SIZE;
+
+    ctx.font         = `600 ${fontSize}px '${fontFamily}'`;
     ctx.fillStyle    = '#111827';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2, maxWidth);
   }, []);
 
   const handleSelectFont = async (font) => {
