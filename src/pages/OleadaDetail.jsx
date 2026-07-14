@@ -95,8 +95,13 @@ export default function OleadaDetail() {
   }
 
   const badge = OLEADA_STATUS_BADGE[oleada.status] || { label: oleada.status, cls: 'bg-gray-100 text-gray-800' };
+  const isDrip = oleada.send_mode === 'drip';
   const today = new Date().toISOString().slice(0, 10);
   const sentToday = oleada.last_batch_sent_date && String(oleada.last_batch_sent_date).slice(0, 10) === today;
+  const dripIntervalMs = 10 * 60 * 1000; // debe coincidir con OLEADA_DRIP_INTERVAL_MINUTES (default backend: 10)
+  const dripOnCooldown = isDrip && oleada.last_batch_sent_at
+    && (new Date().getTime() - new Date(oleada.last_batch_sent_at).getTime()) < dripIntervalMs;
+  const sendDisabled = isDrip ? dripOnCooldown : sentToday;
   const totalPages = Math.ceil(recipients.total / 20);
 
   const handleSendNow = async () => {
@@ -149,7 +154,10 @@ export default function OleadaDetail() {
           <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-blue-800">{oleada.npn_name}.pdf</p>
-            <p className="text-xs text-blue-600">NPN: {oleada.npn_code} · Canal: {oleada.send_channel} · {oleada.daily_limit}/día</p>
+            <p className="text-xs text-blue-600">
+              NPN: {oleada.npn_code} · Canal: {oleada.send_channel} ·{' '}
+              {isDrip ? 'Goteo: 10 cada 10 min' : `${oleada.daily_limit}/día`}
+            </p>
           </div>
         </div>
 
@@ -180,7 +188,9 @@ export default function OleadaDetail() {
           </div>
           <p className="text-xs text-gray-400 mt-4 text-center">
             {oleada.sent_count}/{oleada.total_recipients} enviados en total
-            {oleada.last_batch_sent_date && ` · último lote: ${fmt(oleada.last_batch_sent_date)}`}
+            {isDrip
+              ? oleada.last_batch_sent_at && ` · último lote: ${fmt(oleada.last_batch_sent_at)}`
+              : oleada.last_batch_sent_date && ` · último lote: ${fmt(oleada.last_batch_sent_date)}`}
           </p>
         </div>
 
@@ -193,11 +203,13 @@ export default function OleadaDetail() {
           {oleada.status === 'active' && (
             <button
               onClick={handleSendNow}
-              disabled={sending || sentToday}
+              disabled={sending || sendDisabled}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {sentToday ? 'Ya enviado hoy' : 'Enviar lote de hoy'}
+              {isDrip
+                ? (dripOnCooldown ? 'Envío automático en curso' : 'Forzar lote ahora')
+                : (sentToday ? 'Ya enviado hoy' : 'Enviar lote de hoy')}
             </button>
           )}
           {oleada.status === 'active' && (
