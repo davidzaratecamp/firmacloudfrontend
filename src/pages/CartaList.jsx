@@ -1,19 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { listCartas, exportCartas } from '../api/cartas';
+import { listCartas, exportCartas, deleteCarta } from '../api/cartas';
 import Layout from '../components/Layout';
 import Modal from '../components/Modal';
-import { Search, ChevronRight, Mail, MailOpen, PenLine, Clock, FileSpreadsheet, Loader2, RefreshCw } from 'lucide-react';
+import { Search, ChevronRight, Mail, MailOpen, PenLine, Clock, AlertTriangle, FileSpreadsheet, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 
 const LIMIT = 20;
 
-const STATUS_OPTIONS = ['', 'pending', 'viewed', 'signed', 'expired'];
+const STATUS_OPTIONS = ['', 'pending', 'viewed', 'signed', 'expired', 'failed'];
 const STATUS_LABELS  = {
   '':       'Todos',
   pending:  'Pendientes',
   viewed:   'Email Abierto',
   signed:   'Firmados',
   expired:  'Expirados',
+  failed:   'Fallidos',
 };
 
 const STATUS_BADGE = {
@@ -21,13 +22,15 @@ const STATUS_BADGE = {
   viewed:   { label: 'Email Abierto', cls: 'bg-blue-100 text-blue-800'    },
   signed:   { label: 'Firmado',       cls: 'bg-green-100 text-green-800'  },
   expired:  { label: 'Expirado',      cls: 'bg-red-100 text-red-800'      },
+  failed:   { label: 'Fallido',       cls: 'bg-red-100 text-red-800'      },
 };
 
 const STATUS_ICON = {
-  pending:  <Clock    className="h-4 w-4 text-yellow-500" />,
-  viewed:   <MailOpen className="h-4 w-4 text-blue-500"   />,
-  signed:   <PenLine  className="h-4 w-4 text-green-500"  />,
-  expired:  <Clock    className="h-4 w-4 text-red-400"    />,
+  pending:  <Clock        className="h-4 w-4 text-yellow-500" />,
+  viewed:   <MailOpen     className="h-4 w-4 text-blue-500"   />,
+  signed:   <PenLine      className="h-4 w-4 text-green-500"  />,
+  expired:  <Clock        className="h-4 w-4 text-red-400"    />,
+  failed:   <AlertTriangle className="h-4 w-4 text-red-500"   />,
 };
 
 function CartaBadge({ status }) {
@@ -50,6 +53,7 @@ export default function CartaList() {
   const [exportOpen, setExportOpen]     = useState(false);
   const [exporting, setExporting]       = useState(false);
   const [refreshing, setRefreshing]     = useState(false);
+  const [deletingId, setDeletingId]     = useState(null);
 
   const load = useCallback(() => {
     return listCartas({ search, status, dateFrom, dateTo, page, limit: LIMIT }).then(r => setData(r.data));
@@ -63,6 +67,21 @@ export default function CartaList() {
       await load();
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleDelete = async (e, carta) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm(`¿Eliminar la carta fallida de ${carta.client_name}? No se puede deshacer.`)) return;
+    setDeletingId(carta.id);
+    try {
+      await deleteCarta(carta.id);
+      load();
+    } catch {
+      alert('No se pudo eliminar la carta');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -175,6 +194,16 @@ export default function CartaList() {
                   </p>
                 </div>
                 <CartaBadge status={carta.status} />
+                {carta.status === 'failed' && (
+                  <button
+                    onClick={(e) => handleDelete(e, carta)}
+                    disabled={deletingId === carta.id}
+                    title="Eliminar carta fallida"
+                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                  >
+                    {deletingId === carta.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  </button>
+                )}
                 <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
               </div>
             </Link>

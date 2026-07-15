@@ -139,12 +139,12 @@ export default function OleadaDetail() {
 
   const handleDeleteFailed = async () => {
     const failedCount = oleada.counts?.failed_count || 0;
-    if (!window.confirm(`¿Eliminar los ${failedCount} destinatario(s) fallido(s)? Esto también borra las cartas que hayan quedado pendientes sin entregar. No se puede deshacer.`)) return;
+    if (!window.confirm(`¿Eliminar los ${failedCount} destinatario(s) fallido(s)? Esto también borra sus cartas fallidas en el módulo Cartas. No se puede deshacer.`)) return;
     setDeleting(true);
     setActionMsg('');
     try {
       const { data } = await deleteFailedRecipients(id);
-      setActionMsg(`${data.deletedRecipients} destinatario(s) eliminado(s) · ${data.deletedOrphanCartas} carta(s) huérfana(s) borrada(s).`);
+      setActionMsg(`${data.deletedRecipients} destinatario(s) eliminado(s) · ${data.deletedCartas} carta(s) borrada(s).`);
       loadOleada();
       loadRecipients();
     } catch (err) {

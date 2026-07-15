@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCarta, downloadCarta, getCartaPreviewUrl } from '../api/cartas';
+import { getCarta, downloadCarta, getCartaPreviewUrl, deleteCarta } from '../api/cartas';
 import Layout from '../components/Layout';
 import Modal from '../components/Modal';
-import { ArrowLeft, Mail, MailOpen, PenLine, Clock, User, Phone, FileText, Download, Loader2, Eye, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Mail, MailOpen, PenLine, Clock, User, Phone, FileText, Download, Loader2, Eye, RefreshCw, Trash2 } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:  { label: 'Pendiente',     cls: 'bg-yellow-100 text-yellow-800' },
   viewed:   { label: 'Email Abierto', cls: 'bg-blue-100 text-blue-800'    },
   signed:   { label: 'Firmado',       cls: 'bg-green-100 text-green-800'  },
   expired:  { label: 'Expirado',      cls: 'bg-red-100 text-red-800'      },
+  failed:   { label: 'Fallido',       cls: 'bg-red-100 text-red-800'      },
 };
 
 function fmt(dateStr) {
@@ -31,6 +32,7 @@ export default function CartaDetail() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [dataModalOpen, setDataModalOpen]   = useState(false);
   const [refreshing, setRefreshing]         = useState(false);
+  const [deleting, setDeleting]             = useState(false);
 
   const loadCarta = useCallback(() => {
     return getCarta(id)
@@ -93,6 +95,18 @@ export default function CartaDetail() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm(`¿Eliminar la carta fallida de ${carta.client_name}? No se puede deshacer.`)) return;
+    setDeleting(true);
+    try {
+      await deleteCarta(carta.id);
+      navigate('/cartas');
+    } catch {
+      alert('No se pudo eliminar la carta');
+      setDeleting(false);
+    }
+  };
+
   const timeline = [
     {
       key:  'sent',
@@ -140,6 +154,16 @@ export default function CartaDetail() {
             <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             Refrescar
           </button>
+          {carta.status === 'failed' && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center gap-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+            >
+              {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              Eliminar
+            </button>
+          )}
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.cls}`}>
             {badge.label}
           </span>
