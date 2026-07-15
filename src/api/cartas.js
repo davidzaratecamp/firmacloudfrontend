@@ -1,8 +1,9 @@
 import api from './client';
 
-export const sendCarta  = (data)   => api.post('/cartas/send', data);
-export const listCartas = (params) => api.get('/cartas', { params });
-export const getCarta   = (id)     => api.get(`/cartas/${id}`);
+export const sendCarta   = (data)   => api.post('/cartas/send', data);
+export const listCartas  = (params) => api.get('/cartas', { params });
+export const getCarta    = (id)     => api.get(`/cartas/${id}`);
+export const deleteCarta = (id)     => api.delete(`/cartas/${id}`);
 
 export async function downloadCarta(id, filename) {
   const res = await api.get(`/cartas/${id}/download`, { responseType: 'blob' });
