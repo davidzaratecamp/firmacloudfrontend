@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  getOleada, listOleadaRecipients, sendOleadaNow, retryFailedRecipients,
+  getOleada, listOleadaRecipients, sendOleadaNow, retryFailedRecipients, deleteFailedRecipients,
   pauseOleada, resumeOleada, cancelOleada,
 } from '../api/oleadas';
 import Layout from '../components/Layout';
 import {
   ArrowLeft, FileText, Send, Loader2, Clock, MailOpen, PenLine,
-  AlertTriangle, PauseCircle, PlayCircle, XCircle, RefreshCw, RotateCcw,
+  AlertTriangle, PauseCircle, PlayCircle, XCircle, RefreshCw, RotateCcw, Trash2,
 } from 'lucide-react';
 
 const OLEADA_STATUS_BADGE = {
@@ -57,6 +57,7 @@ export default function OleadaDetail() {
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
 
   const [recipients, setRecipients] = useState({ data: [], total: 0 });
@@ -133,6 +134,23 @@ export default function OleadaDetail() {
       setActionMsg(err.response?.data?.error || 'No se pudo reintentar los fallidos');
     } finally {
       setRetrying(false);
+    }
+  };
+
+  const handleDeleteFailed = async () => {
+    const failedCount = oleada.counts?.failed_count || 0;
+    if (!window.confirm(`¿Eliminar los ${failedCount} destinatario(s) fallido(s)? Esto también borra las cartas que hayan quedado pendientes sin entregar. No se puede deshacer.`)) return;
+    setDeleting(true);
+    setActionMsg('');
+    try {
+      const { data } = await deleteFailedRecipients(id);
+      setActionMsg(`${data.deletedRecipients} destinatario(s) eliminado(s) · ${data.deletedOrphanCartas} carta(s) huérfana(s) borrada(s).`);
+      loadOleada();
+      loadRecipients();
+    } catch (err) {
+      setActionMsg(err.response?.data?.error || 'No se pudo eliminar los fallidos');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -260,6 +278,16 @@ export default function OleadaDetail() {
             >
               {retrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
               Reintentar fallidos ({oleada.counts.failed_count})
+            </button>
+          )}
+          {(oleada.counts?.failed_count || 0) > 0 && (
+            <button
+              onClick={handleDeleteFailed}
+              disabled={deleting}
+              className="flex items-center gap-2 border border-red-200 text-red-600 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Eliminar fallidos
             </button>
           )}
         </div>
