@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  getOleada, listOleadaRecipients, sendOleadaNow,
+  getOleada, listOleadaRecipients, sendOleadaNow, retryFailedRecipients,
   pauseOleada, resumeOleada, cancelOleada,
 } from '../api/oleadas';
 import Layout from '../components/Layout';
 import {
   ArrowLeft, FileText, Send, Loader2, Clock, MailOpen, PenLine,
-  AlertTriangle, PauseCircle, PlayCircle, XCircle, RefreshCw,
+  AlertTriangle, PauseCircle, PlayCircle, XCircle, RefreshCw, RotateCcw,
 } from 'lucide-react';
 
 const OLEADA_STATUS_BADGE = {
@@ -56,6 +56,7 @@ export default function OleadaDetail() {
   const [oleada, setOleada] = useState(null);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
 
   const [recipients, setRecipients] = useState({ data: [], total: 0 });
@@ -117,6 +118,21 @@ export default function OleadaDetail() {
       setActionMsg(err.response?.data?.error || 'Error al enviar el lote');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleRetryFailed = async () => {
+    setRetrying(true);
+    setActionMsg('');
+    try {
+      const { data } = await retryFailedRecipients(id);
+      setActionMsg(`${data.requeued} destinatario(s) vuelto(s) a pendiente. Se reintentarán en el próximo lote.`);
+      loadOleada();
+      loadRecipients();
+    } catch (err) {
+      setActionMsg(err.response?.data?.error || 'No se pudo reintentar los fallidos');
+    } finally {
+      setRetrying(false);
     }
   };
 
@@ -234,6 +250,16 @@ export default function OleadaDetail() {
               className="flex items-center gap-2 border border-red-200 text-red-600 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-red-50 transition-colors"
             >
               <XCircle className="h-4 w-4" /> Cancelar
+            </button>
+          )}
+          {(oleada.counts?.failed_count || 0) > 0 && (
+            <button
+              onClick={handleRetryFailed}
+              disabled={retrying}
+              className="flex items-center gap-2 border border-orange-200 text-orange-600 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-orange-50 disabled:opacity-50 transition-colors"
+            >
+              {retrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+              Reintentar fallidos ({oleada.counts.failed_count})
             </button>
           )}
         </div>

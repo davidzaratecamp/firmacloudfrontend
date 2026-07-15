@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers } from 'lucide-react';
+import { FIRMA_ROLES, CORREO_ROLES } from '../utils/roles';
+import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers, Users } from 'lucide-react';
 
 const NAV = [
-  { to: '/dashboard',    label: 'Dashboard',        icon: LayoutDashboard },
-  { to: '/enviar',       label: 'Enviar Documento',  icon: SendHorizontal  },
-  { to: '/firmas',       label: 'Firmas',            icon: FileText        },
-  { to: '/enviar-carta', label: 'Enviar Carta',      icon: MailPlus        },
-  { to: '/cartas',       label: 'Cartas',            icon: Inbox           },
-  { to: '/oleadas',      label: 'Oleadas',           icon: Layers          },
+  { to: '/dashboard',    label: 'Dashboard',        icon: LayoutDashboard, roles: FIRMA_ROLES  },
+  { to: '/enviar',       label: 'Enviar Documento',  icon: SendHorizontal,  roles: FIRMA_ROLES  },
+  { to: '/firmas',       label: 'Firmas',            icon: FileText,        roles: FIRMA_ROLES  },
+  { to: '/enviar-carta', label: 'Enviar Carta',      icon: MailPlus,        roles: CORREO_ROLES },
+  { to: '/cartas',       label: 'Cartas',            icon: Inbox,           roles: CORREO_ROLES },
+  { to: '/oleadas',      label: 'Oleadas',           icon: Layers,          roles: CORREO_ROLES },
+  { to: '/agentes',      label: 'Agentes',           icon: Users,           roles: []           },
 ];
 
 export default function Layout({ children }) {
@@ -30,7 +32,7 @@ export default function Layout({ children }) {
         <p className="text-blue-400 text-xs mt-1">Asiste Health Care</p>
       </div>
       <nav className="flex-1 p-4 space-y-1">
-        {NAV.map(({ to, label, icon: Icon }) => (
+        {NAV.filter(({ roles }) => user?.role === 'admin' || roles.includes(user?.role)).map(({ to, label, icon: Icon }) => (
           <Link key={to} to={to} onClick={() => setOpen(false)}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               location.pathname.startsWith(to)
