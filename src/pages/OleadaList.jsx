@@ -1,8 +1,54 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { listOleadas } from '../api/oleadas';
+import { listOleadas, getDailyUsage } from '../api/oleadas';
 import Layout from '../components/Layout';
-import { Search, ChevronRight, Plus, PlayCircle, PauseCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, ChevronRight, Plus, PlayCircle, PauseCircle, CheckCircle2, XCircle, Mail, AlertTriangle } from 'lucide-react';
+
+function formatCountdown(resetsAt) {
+  const diff = new Date(resetsAt).getTime() - Date.now();
+  if (diff <= 0) return '0h 0m';
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
+}
+
+// Cupo diario AUTOIMPUESTO (no es el límite real de Gmail, ver OLEADA_DAILY_EMAIL_CAP en
+// el backend) — se refresca solo cada minuto para que la cuenta regresiva se mantenga viva.
+function DailyUsageBanner() {
+  const [usage, setUsage] = useState(null);
+
+  useEffect(() => {
+    const load = () => getDailyUsage().then(r => setUsage(r.data)).catch(() => {});
+    load();
+    const interval = setInterval(load, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!usage) return null;
+  const pct = Math.min(100, Math.round((usage.sentToday / usage.cap) * 100));
+
+  return (
+    <div className={`rounded-xl border p-4 mb-4 ${usage.capReached ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+      <div className="flex items-center justify-between mb-2 gap-3 flex-wrap">
+        <p className={`flex items-center gap-2 text-sm font-semibold ${usage.capReached ? 'text-red-800' : 'text-blue-800'}`}>
+          {usage.capReached ? <AlertTriangle className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
+          {usage.capReached
+            ? `Cupo diario de correos alcanzado (${usage.sentToday}/${usage.cap})`
+            : `Correos enviados hoy: ${usage.sentToday}/${usage.cap}`}
+        </p>
+        {usage.capReached && (
+          <p className="text-xs text-red-600">Se reinicia en {formatCountdown(usage.resetsAt)}</p>
+        )}
+      </div>
+      <div className="w-full bg-white/60 rounded-full h-1.5">
+        <div
+          className={`h-1.5 rounded-full transition-all ${usage.capReached ? 'bg-red-500' : 'bg-blue-500'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 const STATUS_OPTIONS = ['', 'active', 'paused', 'completed', 'cancelled'];
 const STATUS_LABELS = {
@@ -63,6 +109,8 @@ export default function OleadaList() {
           Nueva oleada
         </button>
       </div>
+
+      <DailyUsageBanner />
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-4 border-b border-gray-100 flex flex-wrap gap-3 items-center">
