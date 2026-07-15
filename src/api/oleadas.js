@@ -4,6 +4,7 @@ export const createOleada = (formData) =>
   api.post('/oleadas', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 export const listOleadas = (params) => api.get('/oleadas', { params });
+export const getDailyUsage = () => api.get('/oleadas/daily-usage');
 export const getOleada = (id) => api.get(`/oleadas/${id}`);
 export const listOleadaRecipients = (id, params) => api.get(`/oleadas/${id}/recipients`, { params });
 export const sendOleadaNow = (id) => api.post(`/oleadas/${id}/send-now`);
