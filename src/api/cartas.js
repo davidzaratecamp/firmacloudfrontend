@@ -25,6 +25,28 @@ export async function getCartaPreviewUrl(id) {
   return URL.createObjectURL(blob);
 }
 
+// type: 'social' | 'status' — devuelve un object URL para previsualizar la foto del formulario
+export async function getCartaPhotoUrl(id, type) {
+  const res = await api.get(`/cartas/${id}/photo/${type}`, { responseType: 'blob' });
+  return URL.createObjectURL(res.data);
+}
+
+const PHOTO_EXT_BY_MIME = { 'image/png': 'png', 'image/webp': 'webp', 'image/jpeg': 'jpg' };
+
+export async function downloadCartaPhoto(id, type) {
+  const res = await api.get(`/cartas/${id}/photo/${type}`, { responseType: 'blob' });
+  const ext = PHOTO_EXT_BY_MIME[res.data.type] || 'jpg';
+  const label = type === 'social' ? 'seguro-social' : 'estatus-migratorio';
+  const href = URL.createObjectURL(res.data);
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = `${label}-${id}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(href);
+}
+
 export async function exportCartas(params) {
   const res = await api.get('/cartas/export', { params, responseType: 'blob' });
   const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

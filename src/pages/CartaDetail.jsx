@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCarta, downloadCarta, getCartaPreviewUrl, deleteCarta } from '../api/cartas';
+import { getCarta, downloadCarta, getCartaPreviewUrl, getCartaPhotoUrl, downloadCartaPhoto, deleteCarta } from '../api/cartas';
 import Layout from '../components/Layout';
 import Modal from '../components/Modal';
-import { ArrowLeft, Mail, MailOpen, PenLine, Clock, User, Phone, FileText, Download, Loader2, Eye, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowLeft, Mail, MailOpen, PenLine, Clock, User, Phone, FileText, Download, Loader2, Eye, RefreshCw, Trash2, Image as ImageIcon } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:  { label: 'Pendiente',     cls: 'bg-yellow-100 text-yellow-800' },
@@ -33,6 +33,10 @@ export default function CartaDetail() {
   const [dataModalOpen, setDataModalOpen]   = useState(false);
   const [refreshing, setRefreshing]         = useState(false);
   const [deleting, setDeleting]             = useState(false);
+
+  const [photoModal, setPhotoModal]         = useState({ url: null, title: '', type: null });
+  const [photoLoading, setPhotoLoading]     = useState(null); // 'social' | 'status' | null
+  const [photoDownloading, setPhotoDownloading] = useState(null); // 'social' | 'status' | null
 
   const loadCarta = useCallback(() => {
     return getCarta(id)
@@ -84,6 +88,34 @@ export default function CartaDetail() {
   const closePreview = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
+  };
+
+  const handleViewPhoto = async (type, title) => {
+    setPhotoLoading(type);
+    try {
+      const url = await getCartaPhotoUrl(carta.id, type);
+      setPhotoModal({ url, title, type });
+    } catch {
+      alert('No se pudo cargar la foto');
+    } finally {
+      setPhotoLoading(null);
+    }
+  };
+
+  const closePhotoModal = () => {
+    if (photoModal.url) URL.revokeObjectURL(photoModal.url);
+    setPhotoModal({ url: null, title: '', type: null });
+  };
+
+  const handleDownloadPhoto = async (type) => {
+    setPhotoDownloading(type);
+    try {
+      await downloadCartaPhoto(carta.id, type);
+    } catch {
+      alert('No se pudo descargar la foto');
+    } finally {
+      setPhotoDownloading(null);
+    }
   };
 
   const handleRefresh = async () => {
@@ -287,6 +319,50 @@ export default function CartaDetail() {
                 <div><span className="text-gray-400 text-xs font-medium">Código postal</span><p className="text-gray-900 mt-0.5">{carta.form_postalcode}</p></div>
               )}
             </div>
+            {(carta.form_social_path || carta.form_status_path) && (
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
+                {carta.form_social_path && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleViewPhoto('social', 'Foto — Seguro Social')}
+                      disabled={photoLoading === 'social'}
+                      className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                    >
+                      {photoLoading === 'social' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
+                      Foto seguro social
+                    </button>
+                    <button
+                      onClick={() => handleDownloadPhoto('social')}
+                      disabled={photoDownloading === 'social'}
+                      title="Descargar foto"
+                      className="flex items-center justify-center border border-gray-200 text-gray-600 hover:bg-gray-50 p-1.5 rounded-lg transition-colors disabled:opacity-60"
+                    >
+                      {photoDownloading === 'social' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                )}
+                {carta.form_status_path && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleViewPhoto('status', 'Foto — Estatus Migratorio')}
+                      disabled={photoLoading === 'status'}
+                      className="flex items-center gap-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                    >
+                      {photoLoading === 'status' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
+                      Foto estatus migratorio
+                    </button>
+                    <button
+                      onClick={() => handleDownloadPhoto('status')}
+                      disabled={photoDownloading === 'status'}
+                      title="Descargar foto"
+                      className="flex items-center justify-center border border-gray-200 text-gray-600 hover:bg-gray-50 p-1.5 rounded-lg transition-colors disabled:opacity-60"
+                    >
+                      {photoDownloading === 'status' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             <p className="text-xs text-gray-400 mt-3">Enviado el {fmt(carta.form_submitted_at)}</p>
           </div>
         )}
@@ -325,6 +401,22 @@ export default function CartaDetail() {
       <Modal open={!!previewUrl} onClose={closePreview} title="Vista previa del documento firmado" maxWidth="max-w-3xl">
         {previewUrl && (
           <iframe src={previewUrl} title="Vista previa PDF" className="w-full h-[75vh] rounded-lg border border-gray-200" />
+        )}
+      </Modal>
+
+      <Modal open={!!photoModal.url} onClose={closePhotoModal} title={photoModal.title} maxWidth="max-w-lg">
+        {photoModal.url && (
+          <div className="space-y-3">
+            <img src={photoModal.url} alt={photoModal.title} className="w-full rounded-lg border border-gray-200" />
+            <button
+              onClick={() => handleDownloadPhoto(photoModal.type)}
+              disabled={photoDownloading === photoModal.type}
+              className="flex items-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+            >
+              {photoDownloading === photoModal.type ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Descargar
+            </button>
+          </div>
         )}
       </Modal>
 
