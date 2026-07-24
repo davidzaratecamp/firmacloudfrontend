@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FIRMA_ROLES, CORREO_ROLES } from '../utils/roles';
-import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers, Users } from 'lucide-react';
+import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES } from '../utils/roles';
+import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers, Users, Briefcase } from 'lucide-react';
 
 const NAV = [
-  { to: '/dashboard',    label: 'Dashboard',        icon: LayoutDashboard, roles: FIRMA_ROLES  },
-  { to: '/enviar',       label: 'Enviar Documento',  icon: SendHorizontal,  roles: FIRMA_ROLES  },
-  { to: '/firmas',       label: 'Firmas',            icon: FileText,        roles: FIRMA_ROLES  },
-  { to: '/enviar-carta', label: 'Enviar Carta',      icon: MailPlus,        roles: CORREO_ROLES },
-  { to: '/cartas',       label: 'Cartas',            icon: Inbox,           roles: CORREO_ROLES },
-  { to: '/oleadas',      label: 'Oleadas',           icon: Layers,          roles: CORREO_ROLES },
-  { to: '/agentes',      label: 'Agentes',           icon: Users,           roles: []           },
+  { to: '/dashboard',       label: 'Dashboard',        icon: LayoutDashboard, roles: FIRMA_ROLES  },
+  { to: '/enviar',          label: 'Enviar Documento',  icon: SendHorizontal,  roles: FIRMA_ROLES  },
+  { to: '/firmas',          label: 'Firmas',            icon: FileText,        roles: FIRMA_ROLES  },
+  { to: '/enviar-carta',    label: 'Enviar Carta',      icon: MailPlus,        roles: CORREO_ROLES },
+  { to: '/cartas',          label: 'Cartas',            icon: Inbox,           roles: CORREO_ROLES },
+  { to: '/oleadas',         label: 'Oleadas',           icon: Layers,          roles: CORREO_ROLES },
+  { to: '/rrhh/enviar',     label: 'Enviar Contrato',   icon: Briefcase,       roles: HR_ROLES     },
+  { to: '/rrhh/contratos',  label: 'Contratos',         icon: FileText,        roles: HR_ROLES     },
+  { to: '/agentes',         label: 'Agentes',           icon: Users,           roles: []           },
 ];
 
 export default function Layout({ children }) {

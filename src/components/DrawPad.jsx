@@ -143,6 +143,7 @@ const DrawPad = forwardRef(function DrawPad({ onEnd, signerName = '' }, ref) {
   // ── Imperative handle ────────────────────────────────────────────────────
   useImperativeHandle(ref, () => ({
     isEmpty:   () => mode === 'font' ? !selectedFont : empty,
+    getMode:   () => mode,
     clear: () => {
       setSelectedFont(null);
       setEmpty(true);
