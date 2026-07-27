@@ -91,6 +91,10 @@ export default function SignatureDetail() {
               <InfoRow label="Email del Cliente" value={sig.client_email} />
               <InfoRow label="Teléfono" value={sig.client_phone} />
               <InfoRow label="Agente" value={sig.agent_name} />
+              <InfoRow label="Agente que Envió (Usuario Obama)" value={sig.logged_agent_name} />
+              <InfoRow label="ID de Agente (Usuario Obama)" value={sig.logged_agent_id} />
+              <InfoRow label="NPN del Documento" value={sig.agent_name_sent} />
+              <InfoRow label="Código NPN" value={sig.agent_cedula} />
               <InfoRow label="Documento" value={sig.document_name} />
               <InfoRow label="Hash del Documento" value={sig.document_hash} />
             </dl>

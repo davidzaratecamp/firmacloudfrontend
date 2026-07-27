@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { listSignatures } from '../api/signatures';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, User } from 'lucide-react';
 
 const STATUS_OPTIONS = ['', 'pending', 'viewed', 'signed', 'expired'];
 const STATUS_LABELS = { '': 'Todos', pending: 'Pendientes', viewed: 'Vistos', signed: 'Firmados', expired: 'Expirados' };
@@ -61,6 +61,13 @@ export default function SignatureList() {
                 <div>
                   <p className="text-sm font-medium text-gray-900">{sig.client_name}</p>
                   <p className="text-xs text-gray-500">{sig.client_email}</p>
+                  {sig.logged_agent_name && (
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                      <User className="h-3 w-3" />
+                      {sig.logged_agent_name}
+                      {sig.logged_agent_id && ` (ID: ${sig.logged_agent_id})`}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-4">
