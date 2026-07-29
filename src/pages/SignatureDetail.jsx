@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getSignature, downloadSigned, downloadCertificate, deleteSignature, replaceSignedDocument } from '../api/signatures';
+import { getSignature, downloadSigned, downloadCertificate, previewSigned, previewCertificate, deleteSignature, replaceSignedDocument, replaceCertificate } from '../api/signatures';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
-import { Download, ArrowLeft, FileCheck, Shield, Loader2, Trash2, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Download, ArrowLeft, FileCheck, Shield, Loader2, Trash2, RefreshCw, CheckCircle2, XCircle, Eye } from 'lucide-react';
 
 function InfoRow({ label, value }) {
   if (!value) return null;
@@ -19,13 +19,18 @@ export default function SignatureDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [sig, setSig]                   = useState(null);
-  const [downloading, setDownloading]   = useState(null); // 'pdf' | 'cert' | null
+  const [downloading, setDownloading]   = useState(null); // 'pdf' | 'cert' | 'preview-pdf' | 'preview-cert' | null
   const [deleting, setDeleting]         = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [replacing, setReplacing]       = useState(false);
   const [replaceError, setReplaceError] = useState(null);
   const [replaceOk, setReplaceOk]       = useState(false);
   const fileInputRef = useRef(null);
+
+  const [replacingCert, setReplacingCert]     = useState(false);
+  const [replaceCertError, setReplaceCertError] = useState(null);
+  const [replaceCertOk, setReplaceCertOk]     = useState(false);
+  const certInputRef = useRef(null);
 
   useEffect(() => { getSignature(id).then(r => setSig(r.data)); }, [id]);
 
@@ -51,6 +56,31 @@ export default function SignatureDetail() {
       setReplaceError(err.response?.data?.error || 'Error al reemplazar el PDF');
     } finally {
       setReplacing(false);
+    }
+  };
+
+  const handleReplaceCertificate = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      setReplaceCertError('El archivo debe ser un PDF');
+      setReplaceCertOk(false);
+      return;
+    }
+    setReplacingCert(true);
+    setReplaceCertError(null);
+    setReplaceCertOk(false);
+    try {
+      await replaceCertificate(id, file);
+      const r = await getSignature(id);
+      setSig(r.data);
+      setReplaceCertOk(true);
+      setTimeout(() => setReplaceCertOk(false), 4000);
+    } catch (err) {
+      setReplaceCertError(err.response?.data?.error || 'Error al reemplazar el sumario');
+    } finally {
+      setReplacingCert(false);
     }
   };
 
@@ -154,28 +184,54 @@ export default function SignatureDetail() {
         <div className="space-y-4">
           {sig.status === 'signed' && (
             <>
-              <button
-                onClick={async () => {
-                  setDownloading('pdf');
-                  try { await downloadSigned(id, sig.document_name); } finally { setDownloading(null); }
-                }}
-                disabled={downloading === 'pdf'}
-                className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-xl transition-colors"
-              >
-                {downloading === 'pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                {downloading === 'pdf' ? 'Descargando...' : 'Descargar PDF Firmado'}
-              </button>
-              <button
-                onClick={async () => {
-                  setDownloading('cert');
-                  try { await downloadCertificate(id); } finally { setDownloading(null); }
-                }}
-                disabled={downloading === 'cert'}
-                className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-3 px-4 rounded-xl transition-colors"
-              >
-                {downloading === 'cert' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-                {downloading === 'cert' ? 'Descargando...' : 'Descargar Sumarium'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    setDownloading('pdf');
+                    try { await downloadSigned(id, sig.document_name); } finally { setDownloading(null); }
+                  }}
+                  disabled={downloading === 'pdf'}
+                  className="flex items-center justify-center gap-2 flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                >
+                  {downloading === 'pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  {downloading === 'pdf' ? 'Descargando...' : 'Descargar PDF'}
+                </button>
+                <button
+                  onClick={async () => {
+                    setDownloading('preview-pdf');
+                    try { await previewSigned(id); } finally { setDownloading(null); }
+                  }}
+                  disabled={downloading === 'preview-pdf'}
+                  title="Previsualizar PDF Firmado"
+                  className="flex items-center justify-center gap-2 border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-60 font-medium py-3 px-4 rounded-xl transition-colors"
+                >
+                  {downloading === 'preview-pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    setDownloading('cert');
+                    try { await downloadCertificate(id); } finally { setDownloading(null); }
+                  }}
+                  disabled={downloading === 'cert'}
+                  className="flex items-center justify-center gap-2 flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                >
+                  {downloading === 'cert' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                  {downloading === 'cert' ? 'Descargando...' : 'Descargar Sumarium'}
+                </button>
+                <button
+                  onClick={async () => {
+                    setDownloading('preview-cert');
+                    try { await previewCertificate(id); } finally { setDownloading(null); }
+                  }}
+                  disabled={downloading === 'preview-cert'}
+                  title="Previsualizar Sumario"
+                  className="flex items-center justify-center gap-2 border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-60 font-medium py-3 px-4 rounded-xl transition-colors"
+                >
+                  {downloading === 'preview-cert' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
 
               <input
                 ref={fileInputRef}
@@ -200,6 +256,32 @@ export default function SignatureDetail() {
               {replaceError && (
                 <p className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 -mt-2">
                   <XCircle className="h-3.5 w-3.5 flex-shrink-0" />{replaceError}
+                </p>
+              )}
+
+              <input
+                ref={certInputRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={handleReplaceCertificate}
+              />
+              <button
+                onClick={() => certInputRef.current?.click()}
+                disabled={replacingCert}
+                className="flex items-center justify-center gap-2 w-full border border-amber-300 text-amber-700 hover:bg-amber-50 disabled:opacity-60 font-medium py-2.5 px-4 rounded-xl transition-colors text-sm"
+              >
+                {replacingCert ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {replacingCert ? 'Reemplazando...' : 'Reemplazar Sumario'}
+              </button>
+              {replaceCertOk && (
+                <p className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2 -mt-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" />Sumario reemplazado correctamente
+                </p>
+              )}
+              {replaceCertError && (
+                <p className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 -mt-2">
+                  <XCircle className="h-3.5 w-3.5 flex-shrink-0" />{replaceCertError}
                 </p>
               )}
             </>
