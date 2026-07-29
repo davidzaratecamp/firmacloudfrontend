@@ -322,13 +322,12 @@ export default function SignPage() {
             {/* Nombre */}
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                Nombre completo *
+                Nombre completo
               </label>
               <input
                 value={signerName}
-                onChange={e => setSignerName(e.target.value)}
-                placeholder="Como aparece en su documento de identidad"
-                className="w-full px-3.5 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                readOnly
+                className="w-full px-3.5 py-3 border border-gray-200 rounded-xl text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
               />
             </div>
 
