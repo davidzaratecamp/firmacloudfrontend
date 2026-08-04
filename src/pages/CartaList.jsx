@@ -17,6 +17,17 @@ const STATUS_LABELS  = {
   failed:   'Fallidos',
 };
 
+const INSURER_OPTIONS = ['', 'oscar', 'ambetter'];
+const INSURER_LABELS  = {
+  '':         'Todas',
+  oscar:      'Oscar',
+  ambetter:   'Ambetter',
+};
+const INSURER_BADGE = {
+  oscar:    'bg-slate-100 text-slate-700',
+  ambetter: 'bg-purple-100 text-purple-700',
+};
+
 const STATUS_BADGE = {
   pending:  { label: 'Pendiente',     cls: 'bg-yellow-100 text-yellow-800' },
   viewed:   { label: 'Email Abierto', cls: 'bg-blue-100 text-blue-800'    },
@@ -46,6 +57,7 @@ export default function CartaList() {
   const [data, setData]     = useState({ data: [], total: 0 });
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [insurer, setInsurer] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo]     = useState('');
   const [page, setPage]     = useState(1);
@@ -56,8 +68,8 @@ export default function CartaList() {
   const [deletingId, setDeletingId]     = useState(null);
 
   const load = useCallback(() => {
-    return listCartas({ search, status, dateFrom, dateTo, page, limit: LIMIT }).then(r => setData(r.data));
-  }, [search, status, dateFrom, dateTo, page]);
+    return listCartas({ search, status, insurer, dateFrom, dateTo, page, limit: LIMIT }).then(r => setData(r.data));
+  }, [search, status, insurer, dateFrom, dateTo, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -89,6 +101,7 @@ export default function CartaList() {
 
   const activeFilters = [
     status && `Estado: ${STATUS_LABELS[status]}`,
+    insurer && `Aseguradora: ${INSURER_LABELS[insurer]}`,
     search && `Búsqueda: "${search}"`,
     dateFrom && `Desde: ${dateFrom}`,
     dateTo && `Hasta: ${dateTo}`,
@@ -97,7 +110,7 @@ export default function CartaList() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      await exportCartas({ search, status, dateFrom, dateTo });
+      await exportCartas({ search, status, insurer, dateFrom, dateTo });
       setExportOpen(false);
     } catch {
       alert('No se pudo generar el Excel');
@@ -132,6 +145,19 @@ export default function CartaList() {
                 }`}
               >
                 {STATUS_LABELS[s]}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1 flex-wrap border-l border-gray-200 pl-3">
+            {INSURER_OPTIONS.map(i => (
+              <button
+                key={i}
+                onClick={() => { setInsurer(i); setPage(1); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  insurer === i ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {INSURER_LABELS[i]}
               </button>
             ))}
           </div>
@@ -193,6 +219,9 @@ export default function CartaList() {
                     {new Date(carta.sent_at).toLocaleDateString('es-CO')}
                   </p>
                 </div>
+                <span className={`hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${INSURER_BADGE[carta.insurer] || 'bg-gray-100 text-gray-600'}`}>
+                  {INSURER_LABELS[carta.insurer] || carta.insurer}
+                </span>
                 <CartaBadge status={carta.status} />
                 {carta.status === 'failed' && (
                   <button
