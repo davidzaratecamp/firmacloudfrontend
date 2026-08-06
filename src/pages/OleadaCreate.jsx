@@ -14,9 +14,17 @@ const CHANNELS = [
   { value: 'both',     label: 'Email + WhatsApp', icon: null          },
 ];
 
+// '' = automática (usa la que esté activa para ese NPN, comportamiento de siempre).
+const INSURER_OPTIONS = [
+  { value: '',         label: 'Automática' },
+  { value: 'oscar',    label: 'Oscar' },
+  { value: 'ambetter', label: 'Ambetter Health' },
+];
+
 export default function OleadaCreate() {
   const [selectedNpn, setSelectedNpn] = useState(null);
   const [name, setName] = useState('');
+  const [insurer, setInsurer] = useState('');
   const [sendChannel, setSendChannel] = useState('email');
   const [dailyLimit, setDailyLimit] = useState('20');
   const [file, setFile] = useState(null);
@@ -41,6 +49,7 @@ export default function OleadaCreate() {
       fd.append('npnName', selectedNpn.name);
       fd.append('npnCode', selectedNpn.code);
       fd.append('name', name.trim());
+      if (insurer) fd.append('insurer', insurer);
       fd.append('sendChannel', sendChannel);
       fd.append('dailyLimit', dailyLimit);
       fd.append('file', file);
@@ -136,7 +145,30 @@ export default function OleadaCreate() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">3. Canal de envío</h2>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">3. Aseguradora</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {INSURER_OPTIONS.map(opt => (
+                <button key={opt.value} type="button"
+                  onClick={() => setInsurer(opt.value)}
+                  className={`py-2.5 px-2 rounded-xl border-2 text-xs font-medium transition-colors ${
+                    insurer === opt.value
+                      ? 'border-blue-600 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {insurer && (sendChannel === 'whatsapp' || sendChannel === 'both') && (
+              <p className="mt-2 text-xs text-amber-600">
+                ⚠️ El WhatsApp aprobado en Meta hoy solo tiene el texto de Oscar — el PDF y el correo cambiarán a {INSURER_OPTIONS.find(o => o.value === insurer)?.label}, pero el WhatsApp de toda la oleada seguirá con el texto de Oscar.
+              </p>
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">4. Canal de envío</h2>
             <div className="grid grid-cols-3 gap-2">
               {CHANNELS.map(ch => (
                 <button key={ch.value} type="button"
@@ -158,7 +190,7 @@ export default function OleadaCreate() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">4. Límite de envíos por día</h2>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">5. Límite de envíos por día</h2>
             <input
               type="number"
               min="1"
@@ -172,7 +204,7 @@ export default function OleadaCreate() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">5. Lista de clientes (CSV o Excel)</h2>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">6. Lista de clientes (CSV o Excel)</h2>
             <label className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center gap-2 text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-colors cursor-pointer">
               <Upload className="h-6 w-6" />
               <span className="text-sm">{file ? file.name : 'Haz clic para seleccionar el archivo'}</span>
