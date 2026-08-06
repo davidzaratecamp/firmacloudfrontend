@@ -14,6 +14,16 @@ const CHANNELS = [
   { value: 'both',     label: 'Email + WhatsApp', icon: null          },
 ];
 
+// '' = automática (usa la que esté activa para ese NPN, comportamiento de siempre).
+// El WhatsApp de Meta hoy solo tiene el texto de Oscar — elegir Ambetter con canal
+// WhatsApp/Ambos cambia el PDF y el correo, pero el WhatsApp sigue diciendo Oscar
+// hasta que exista una plantilla aprobada en Meta con el texto de Ambetter.
+const INSURER_OPTIONS = [
+  { value: '',         label: 'Automática' },
+  { value: 'oscar',    label: 'Oscar' },
+  { value: 'ambetter', label: 'Ambetter Health' },
+];
+
 const COUNTRY_CODES = [
   { code: '+1',  label: '🇺🇸 +1'  },
   { code: '+57', label: '🇨🇴 +57' },
@@ -27,6 +37,7 @@ const emptyRecipient = () => ({ name: '', email: '', phone: '', countryCode: '+1
 
 export default function SendCarta() {
   const [selectedNpn, setSelectedNpn] = useState(null);
+  const [insurer, setInsurer] = useState('');
   const [sendChannel, setSendChannel] = useState('email');
 
   const [draft, setDraft] = useState(emptyRecipient());
@@ -72,6 +83,7 @@ export default function SendCarta() {
       const { data } = await sendCarta({
         npnName: selectedNpn.name,
         npnCode: selectedNpn.code,
+        insurer: insurer || undefined,
         sendChannel,
         recipients,
       });
@@ -95,6 +107,9 @@ export default function SendCarta() {
             {result.sent} carta{result.sent !== 1 ? 's' : ''} enviada{result.sent !== 1 ? 's' : ''}
           </h2>
           <p className="text-gray-500 text-sm mb-1">NPN: <strong>{selectedNpn?.name}</strong> · {selectedNpn?.code}</p>
+          <p className="text-gray-400 text-xs mb-1">
+            Aseguradora: {INSURER_OPTIONS.find(o => o.value === insurer)?.label || 'Automática'}
+          </p>
 
           {result.failed > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 text-left mt-4">
@@ -180,9 +195,33 @@ export default function SendCarta() {
             )}
           </div>
 
-          {/* ── 2. Canal ── */}
+          {/* ── 2. Aseguradora ── */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">2. Canal de envío</h2>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">2. Aseguradora</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {INSURER_OPTIONS.map(opt => (
+                <button key={opt.value} type="button"
+                  onClick={() => setInsurer(opt.value)}
+                  className={`py-2.5 px-2 rounded-xl border-2 text-xs font-medium transition-colors ${
+                    insurer === opt.value
+                      ? 'border-blue-600 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {insurer && (needsPhone) && (
+              <p className="mt-2 text-xs text-amber-600">
+                ⚠️ El WhatsApp aprobado en Meta hoy solo tiene el texto de Oscar — al elegir {INSURER_OPTIONS.find(o => o.value === insurer)?.label}, el PDF y el correo cambian pero el WhatsApp seguirá con el texto de Oscar.
+              </p>
+            )}
+          </div>
+
+          {/* ── 3. Canal ── */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">3. Canal de envío</h2>
             <div className="grid grid-cols-3 gap-2">
               {CHANNELS.map(ch => (
                 <button key={ch.value} type="button"
@@ -206,7 +245,7 @@ export default function SendCarta() {
           {/* ── 3. Destinatarios ── */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">3. Destinatarios</h2>
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">4. Destinatarios</h2>
               {recipients.length > 0 && (
                 <span className="flex items-center gap-1 text-xs text-blue-600 font-medium">
                   <Users className="h-3.5 w-3.5" />{recipients.length} agregado{recipients.length > 1 ? 's' : ''}
