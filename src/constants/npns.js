@@ -19,3 +19,18 @@ export const NPNS = [
   { name: 'Carlos Cruz Bracho', code: '21055635' },
   { name: 'Ernesto Redonet',    code: '20723679' },
 ];
+
+// Identificador estable para la URL del link público de actualización de datos
+// (/actualizar-datos/:npnSlug) — minúsculas, sin tildes, espacios como guiones.
+export function slugifyNpn(name) {
+  return name
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export function findNpnBySlug(slug) {
+  return NPNS.find(n => slugifyNpn(n.name) === slug) || null;
+}
