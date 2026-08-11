@@ -13,6 +13,8 @@ import SendCarta from './pages/SendCarta';
 import CartaList from './pages/CartaList';
 import CartaDetail from './pages/CartaDetail';
 import FormularioPublico from './pages/FormularioPublico';
+import ActualizarDatosPublico from './pages/ActualizarDatosPublico';
+import PublicDataUpdateList from './pages/PublicDataUpdateList';
 import OleadaList from './pages/OleadaList';
 import OleadaCreate from './pages/OleadaCreate';
 import OleadaDetail from './pages/OleadaDetail';
@@ -42,6 +44,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/firmar/:token" element={<SignPage />} />
           <Route path="/formulario/:token" element={<FormularioPublico />} />
+          <Route path="/actualizar-datos" element={<ActualizarDatosPublico />} />
+          <Route path="/actualizar-datos/:npnSlug" element={<ActualizarDatosPublico />} />
           <Route path="/firmar-contrato/:token" element={<HrSignPage />} />
           <Route path="/dashboard" element={<RoleRoute roles={FIRMA_ROLES}><Dashboard /></RoleRoute>} />
           <Route path="/enviar" element={<RoleRoute roles={FIRMA_ROLES}><SendDocument /></RoleRoute>} />
@@ -53,6 +57,7 @@ export default function App() {
           <Route path="/oleadas" element={<RoleRoute roles={CORREO_ROLES}><OleadaList /></RoleRoute>} />
           <Route path="/oleadas/nueva" element={<RoleRoute roles={CORREO_ROLES}><OleadaCreate /></RoleRoute>} />
           <Route path="/oleadas/:id" element={<RoleRoute roles={CORREO_ROLES}><OleadaDetail /></RoleRoute>} />
+          <Route path="/actualizaciones-publicas" element={<RoleRoute roles={CORREO_ROLES}><PublicDataUpdateList /></RoleRoute>} />
           <Route path="/agentes" element={<RoleRoute roles={[]}><AgentList /></RoleRoute>} />
           <Route path="/rrhh/enviar" element={<RoleRoute roles={HR_ROLES}><SendContract /></RoleRoute>} />
           <Route path="/rrhh/contratos" element={<RoleRoute roles={HR_ROLES}><ContractList /></RoleRoute>} />
