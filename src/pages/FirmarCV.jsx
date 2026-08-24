@@ -20,8 +20,8 @@ function extractToken(raw) {
   return m ? m[0] : raw || '';
 }
 
-const STEPS = ['cv', 'tratamiento', 'sign'];
-const STEP_LABELS = { cv: 'Hoja de vida', tratamiento: 'Tratamiento de datos', sign: 'Firma' };
+const STEPS = ['tratamiento', 'sign'];
+const STEP_LABELS = { tratamiento: 'Tratamiento de datos', sign: 'Firma' };
 
 export default function FirmarCV() {
   const { token: rawToken } = useParams();
@@ -36,8 +36,8 @@ export default function FirmarCV() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
-  const [step, setStep] = useState('cv');
-  const [docs, setDocs] = useState({ cv: null, tratamiento: null });
+  const [step, setStep] = useState('tratamiento');
+  const [docs, setDocs] = useState({ tratamiento: null });
   const [docLoading, setDocLoading] = useState(false);
   const [docError, setDocError] = useState(false);
   const [numPages, setNumPages] = useState(null);
@@ -47,7 +47,7 @@ export default function FirmarCV() {
   // pdfjs "transfiere" (detach) el buffer subyacente al cargarlo en su worker — si se vuelve a
   // montar un <Document> con el MISMO Uint8Array (ej. al volver a un paso ya visitado) falla con
   // "Failed to load PDF file". Se clona el buffer del documento activo en cada cambio de paso.
-  const activeData = docs[step === 'sign' ? 'tratamiento' : step];
+  const activeData = docs.tratamiento;
   const pdfFile = useMemo(() => (activeData ? { data: activeData.slice() } : null), [activeData, step]);
 
   const loadDoc = useCallback(async (tipo) => {
@@ -73,7 +73,7 @@ export default function FirmarCV() {
         if (cancelled) return;
         setPageData(r.data);
         recordReclutamientoView(token).catch(() => {});
-        await loadDoc('cv');
+        await loadDoc('tratamiento');
       })
       .catch((err) => {
         if (!cancelled) setInitError(err.response?.data?.error || 'Enlace no válido o expirado');
@@ -91,16 +91,9 @@ export default function FirmarCV() {
     setHasSignature(false);
   };
 
-  // El tratamiento de datos se pide recién cuando el candidato hace clic en "Continuar" desde
-  // la hoja de vida (no reactivamente en un efecto) — evita disparar el fetch/setState fuera de
-  // un evento de usuario y solo lo carga la primera vez que se entra a ese paso.
-  const goToNextStep = async () => {
+  const goToNextStep = () => {
     const next = STEPS[stepIndex + 1];
-    if (!next) return;
-    if (next === 'tratamiento' && !docs.tratamiento) {
-      await loadDoc('tratamiento');
-    }
-    setStep(next);
+    if (next) setStep(next);
   };
   const goToPrevStep = () => {
     const prev = STEPS[stepIndex - 1];
@@ -167,8 +160,8 @@ export default function FirmarCV() {
 
   // ── UI principal ──────────────────────────────────────────────────────────
 
-  const isDocStep = step === 'cv' || step === 'tratamiento';
-  const nextLabel = step === 'tratamiento' ? 'Proceder a firmar' : 'Ver tratamiento de datos';
+  const isDocStep = step === 'tratamiento';
+  const nextLabel = 'Proceder a firmar';
 
   return (
     <div className="flex flex-col h-[100dvh] bg-gray-50 overflow-hidden">
@@ -194,7 +187,7 @@ export default function FirmarCV() {
         </div>
       </header>
 
-      {/* ── PASOS: Hoja de vida / Tratamiento de datos ── */}
+      {/* ── PASO: Tratamiento de datos ── */}
       {isDocStep && (
         <>
           <div className="flex-none bg-blue-600 px-4 py-2.5 flex items-center justify-between">
@@ -316,8 +309,8 @@ export default function FirmarCV() {
             <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl p-3">
               <ShieldCheck className="h-4 w-4 text-amber-500 flex-none mt-0.5" />
               <p className="text-xs text-amber-800 leading-relaxed">
-                Al firmar, aceptas que tu firma digital tiene la misma validez legal que una firma manuscrita y que
-                leíste tu hoja de vida y el tratamiento de datos personales completos.
+                Al firmar, aceptas que tu firma digital tiene la misma validez legal que una firma manuscrita, que
+                leíste el tratamiento de datos personales completo y que la información de tu hoja de vida es correcta.
               </p>
             </div>
 
