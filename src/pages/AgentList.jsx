@@ -10,6 +10,7 @@ const ROLE_OPTIONS = [
   { value: 'firma_datos',  label: 'Firma - Tratamiento de Datos' },
   { value: 'correo_datos', label: 'Correo - Actualización de Datos' },
   { value: 'rrhh',         label: 'Recursos Humanos - Contratos Laborales' },
+  { value: 'beemo',        label: 'Beemo' },
   { value: 'agent',        label: 'Agente (acceso completo, legado)' },
 ];
 
@@ -18,6 +19,7 @@ const ROLE_BADGE = {
   firma_datos:  'bg-blue-100 text-blue-800',
   correo_datos: 'bg-teal-100 text-teal-800',
   rrhh:         'bg-amber-100 text-amber-800',
+  beemo:        'bg-indigo-100 text-indigo-800',
   agent:        'bg-gray-100 text-gray-800',
 };
 

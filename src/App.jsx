@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
 import RoleRoute from './components/RoleRoute';
-import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES, defaultRouteForRole } from './utils/roles';
+import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES, BEEMO_ROLES, defaultRouteForRole } from './utils/roles';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import SendDocument from './pages/SendDocument';
@@ -26,6 +26,11 @@ import HrSignPage from './pages/HrSignPage';
 import CandidatoList from './pages/CandidatoList';
 import CandidatoDetail from './pages/CandidatoDetail';
 import FirmarCV from './pages/FirmarCV';
+import SendBeemo from './pages/SendBeemo';
+import BeemoList from './pages/BeemoList';
+import BeemoDetail from './pages/BeemoDetail';
+import BeemoSignPage from './pages/BeemoSignPage';
+import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
 import NotFound from './pages/NotFound';
 
 function RootRedirect() {
@@ -51,6 +56,8 @@ export default function App() {
           <Route path="/actualizar-datos/:npnSlug" element={<ActualizarDatosPublico />} />
           <Route path="/firmar-contrato/:token" element={<HrSignPage />} />
           <Route path="/firmar-reclutamiento/:token" element={<FirmarCV />} />
+          <Route path="/firmar-beemo/:token" element={<BeemoSignPage />} />
+          <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
           <Route path="/dashboard" element={<RoleRoute roles={FIRMA_ROLES}><Dashboard /></RoleRoute>} />
           <Route path="/enviar" element={<RoleRoute roles={FIRMA_ROLES}><SendDocument /></RoleRoute>} />
           <Route path="/firmas" element={<RoleRoute roles={FIRMA_ROLES}><SignatureList /></RoleRoute>} />
@@ -68,6 +75,9 @@ export default function App() {
           <Route path="/rrhh/contratos/:id" element={<RoleRoute roles={HR_ROLES}><ContractDetail /></RoleRoute>} />
           <Route path="/reclutamiento/candidatos" element={<RoleRoute roles={RECLUTAMIENTO_ROLES}><CandidatoList /></RoleRoute>} />
           <Route path="/reclutamiento/candidatos/:id" element={<RoleRoute roles={RECLUTAMIENTO_ROLES}><CandidatoDetail /></RoleRoute>} />
+          <Route path="/beemo/enviar" element={<RoleRoute roles={BEEMO_ROLES}><SendBeemo /></RoleRoute>} />
+          <Route path="/beemo/documentos" element={<RoleRoute roles={BEEMO_ROLES}><BeemoList /></RoleRoute>} />
+          <Route path="/beemo/documentos/:id" element={<RoleRoute roles={BEEMO_ROLES}><BeemoDetail /></RoleRoute>} />
           <Route path="/" element={<RootRedirect />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

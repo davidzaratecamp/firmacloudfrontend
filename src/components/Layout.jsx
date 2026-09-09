@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES } from '../utils/roles';
-import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers, Users, Briefcase, ClipboardCheck, GraduationCap } from 'lucide-react';
+import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES, BEEMO_ROLES } from '../utils/roles';
+import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers, Users, Briefcase, ClipboardCheck, GraduationCap, Bot } from 'lucide-react';
 
 const NAV = [
   { to: '/dashboard',       label: 'Dashboard',        icon: LayoutDashboard, roles: FIRMA_ROLES  },
@@ -15,6 +15,8 @@ const NAV = [
   { to: '/rrhh/enviar',     label: 'Enviar Contrato',   icon: Briefcase,       roles: HR_ROLES     },
   { to: '/rrhh/contratos',  label: 'Contratos',         icon: FileText,        roles: HR_ROLES     },
   { to: '/reclutamiento/candidatos', label: 'Reclutamiento', icon: GraduationCap, roles: RECLUTAMIENTO_ROLES },
+  { to: '/beemo/enviar',    label: 'Enviar (Beemo)',    icon: SendHorizontal,  roles: BEEMO_ROLES  },
+  { to: '/beemo/documentos', label: 'Beemo',            icon: Bot,             roles: BEEMO_ROLES  },
   { to: '/agentes',         label: 'Agentes',           icon: Users,           roles: []           },
 ];
 
