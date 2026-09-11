@@ -3,6 +3,7 @@ import api from './client';
 // Sin "sendCandidato": el envío lo dispara Hydra directamente contra el backend
 // (POST /api/reclutamiento/send, con HYDRA_API_KEY) — el panel de FirmaCloud es de solo lectura.
 export const listCandidatos = (params) => api.get('/reclutamiento', { params });
+export const getCandidatosDashboard = () => api.get('/reclutamiento/dashboard');
 export const getCandidato = (id) => api.get(`/reclutamiento/${id}`);
 
 export const getReclutamientoSigningPage = (token) => api.get(`/reclutamiento-sign/${token}`);
