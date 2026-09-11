@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
 import RoleRoute from './components/RoleRoute';
-import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES, BEEMO_ROLES, defaultRouteForRole } from './utils/roles';
+import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES, BEEMO_ROLES, ALL_ROLES, defaultRouteForRole } from './utils/roles';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import SendDocument from './pages/SendDocument';
@@ -58,7 +58,7 @@ export default function App() {
           <Route path="/firmar-reclutamiento/:token" element={<FirmarCV />} />
           <Route path="/firmar-beemo/:token" element={<BeemoSignPage />} />
           <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
-          <Route path="/dashboard" element={<RoleRoute roles={FIRMA_ROLES}><Dashboard /></RoleRoute>} />
+          <Route path="/dashboard" element={<RoleRoute roles={ALL_ROLES}><Dashboard /></RoleRoute>} />
           <Route path="/enviar" element={<RoleRoute roles={FIRMA_ROLES}><SendDocument /></RoleRoute>} />
           <Route path="/firmas" element={<RoleRoute roles={FIRMA_ROLES}><SignatureList /></RoleRoute>} />
           <Route path="/firmas/:id" element={<RoleRoute roles={FIRMA_ROLES}><SignatureDetail /></RoleRoute>} />

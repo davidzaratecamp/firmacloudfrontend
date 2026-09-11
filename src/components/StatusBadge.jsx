@@ -3,6 +3,7 @@ const MAP = {
   viewed:  { label: 'Visto',     cls: 'bg-blue-100 text-blue-800' },
   signed:  { label: 'Firmado',   cls: 'bg-green-100 text-green-800' },
   expired: { label: 'Expirado',  cls: 'bg-red-100 text-red-800' },
+  failed:  { label: 'Fallido',   cls: 'bg-red-100 text-red-800' },
 };
 
 export default function StatusBadge({ status }) {

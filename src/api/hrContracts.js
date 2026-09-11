@@ -4,6 +4,7 @@ export const sendContract = (formData) =>
   api.post('/rrhh/contratos/send', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 export const listContracts = (params) => api.get('/rrhh/contratos', { params });
+export const getContractsDashboard = () => api.get('/rrhh/contratos/dashboard');
 export const getContract = (id) => api.get(`/rrhh/contratos/${id}`);
 export const deleteContract = (id) => api.delete(`/rrhh/contratos/${id}`);
 

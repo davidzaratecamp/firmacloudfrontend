@@ -2,6 +2,7 @@ import api from './client';
 
 export const sendCarta   = (data)   => api.post('/cartas/send', data);
 export const listCartas  = (params) => api.get('/cartas', { params });
+export const getCartasDashboard = () => api.get('/cartas/dashboard');
 export const getCarta    = (id)     => api.get(`/cartas/${id}`);
 export const deleteCarta = (id)     => api.delete(`/cartas/${id}`);
 
