@@ -105,6 +105,17 @@ export default function SignatureDetail() {
   try { isVital = sig.document_data ? JSON.parse(sig.document_data)._docKind === 'vital' : false; } catch { /* no es JSON válido, no es vital */ }
   const listPath = isVital ? '/firmas-vital' : '/firmas';
 
+  // Vital: document_name es siempre el mismo string fijo para todos los documentos, así que
+  // descargar varios daba siempre el mismo nombre de archivo — se usa nombre del cliente +
+  // UUID de la firma en su lugar (el backend ya hace lo mismo en el Content-Disposition, pero
+  // el navegador usa el atributo `download` que le pasamos acá, no el header del servidor).
+  const sanitizeFilenamePart = (str) => String(str || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9 _-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+  const downloadName = isVital ? `${sanitizeFilenamePart(sig.client_name)}-${sig.id}.pdf` : sig.document_name;
+
   const handlePreview = async () => {
     setPreviewLoading(true);
     try {
@@ -215,7 +226,7 @@ export default function SignatureDetail() {
                 <button
                   onClick={async () => {
                     setDownloading('pdf');
-                    try { await downloadSigned(id, sig.document_name); } finally { setDownloading(null); }
+                    try { await downloadSigned(id, downloadName); } finally { setDownloading(null); }
                   }}
                   disabled={downloading === 'pdf'}
                   className="flex items-center justify-center gap-2 flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-xl transition-colors"
