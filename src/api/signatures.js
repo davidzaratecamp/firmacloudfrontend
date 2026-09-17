@@ -1,6 +1,9 @@
 import api from './client';
 export const getDashboard = () => api.get('/signatures/dashboard');
 export const sendDocument = (data) => api.post('/signatures/send', data);
+// Módulo Vital — Firma Tratamiento de Datos (reemplazo de "Contrato de Activación").
+// Mismo endpoint que la intranet usa vía X-Api-Key; desde el panel se llama con el JWT del agente.
+export const sendVitalDocument = (data) => api.post('/signatures/send-with-data', data);
 export const listSignatures = (params) => api.get('/signatures', { params });
 export const getSignature = (id) => api.get(`/signatures/${id}`);
 export const getSigningPage = (token) => api.get(`/sign/${token}`);
@@ -25,6 +28,14 @@ export const downloadSigned      = (id, name) => downloadFile(`/signatures/${id}
 export const downloadCertificate = (id)        => downloadFile(`/signatures/${id}/certificate`, `sumarium-${id}.pdf`);
 export const deleteSignature     = (id)        => api.delete(`/signatures/${id}`);
 
+// Devuelve un object URL (para mostrar en un <iframe> dentro de un Modal, en vez de abrir
+// una pestaña nueva) — mismo patrón que getCartaPreviewUrl en api/cartas.js.
+export async function getSignedPreviewUrl(id) {
+  const res = await api.get(`/signatures/${id}/download`, { responseType: 'blob' });
+  const blob = new Blob([res.data], { type: 'application/pdf' });
+  return URL.createObjectURL(blob);
+}
+
 // Opens a file in a new tab for inline viewing (blob URL, sends JWT)
 export async function previewFile(url) {
   const res = await api.get(url, { responseType: 'blob' });
@@ -35,7 +46,6 @@ export async function previewFile(url) {
   setTimeout(() => URL.revokeObjectURL(href), 60000);
 }
 
-export const previewSigned      = (id) => previewFile(`/signatures/${id}/download`);
 export const previewCertificate = (id) => previewFile(`/signatures/${id}/certificate`);
 
 export const replaceSignedDocument = (id, file) => {

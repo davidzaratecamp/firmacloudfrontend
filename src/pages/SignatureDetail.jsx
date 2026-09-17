@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getSignature, downloadSigned, downloadCertificate, previewSigned, previewCertificate, deleteSignature, replaceSignedDocument, replaceCertificate } from '../api/signatures';
+import { getSignature, downloadSigned, downloadCertificate, getSignedPreviewUrl, previewCertificate, deleteSignature, replaceSignedDocument, replaceCertificate } from '../api/signatures';
 import Layout from '../components/Layout';
+import Modal from '../components/Modal';
 import StatusBadge from '../components/StatusBadge';
 import { Download, ArrowLeft, FileCheck, Shield, Loader2, Trash2, RefreshCw, CheckCircle2, XCircle, Eye } from 'lucide-react';
 
@@ -19,7 +20,9 @@ export default function SignatureDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [sig, setSig]                   = useState(null);
-  const [downloading, setDownloading]   = useState(null); // 'pdf' | 'cert' | 'preview-pdf' | 'preview-cert' | null
+  const [downloading, setDownloading]   = useState(null); // 'pdf' | 'cert' | 'preview-cert' | null
+  const [previewUrl, setPreviewUrl]     = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [deleting, setDeleting]         = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [replacing, setReplacing]       = useState(false);
@@ -94,6 +97,29 @@ export default function SignatureDetail() {
 
   const fmt = (d) => d ? new Date(d).toLocaleString('es-CO', { timeZone: 'America/Bogota' }) : 'N/A';
   const geo = sig.signer_geolocation;
+
+  // Módulo vital (Vital — Firma Tratamiento de Datos): no genera sumario/certificado
+  // (GET /signatures/:id/certificate responde 400 para estos), así que sus botones de
+  // descargar/visualizar sumario no tienen nada que mostrar — se ocultan.
+  let isVital = false;
+  try { isVital = sig.document_data ? JSON.parse(sig.document_data)._docKind === 'vital' : false; } catch { /* no es JSON válido, no es vital */ }
+
+  const handlePreview = async () => {
+    setPreviewLoading(true);
+    try {
+      const url = await getSignedPreviewUrl(id);
+      setPreviewUrl(url);
+    } catch {
+      alert('No se pudo cargar la vista previa');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const closePreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+  };
 
   return (
     <Layout>
@@ -197,41 +223,40 @@ export default function SignatureDetail() {
                   {downloading === 'pdf' ? 'Descargando...' : 'Descargar PDF'}
                 </button>
                 <button
-                  onClick={async () => {
-                    setDownloading('preview-pdf');
-                    try { await previewSigned(id); } finally { setDownloading(null); }
-                  }}
-                  disabled={downloading === 'preview-pdf'}
+                  onClick={handlePreview}
+                  disabled={previewLoading}
                   title="Previsualizar PDF Firmado"
                   className="flex items-center justify-center gap-2 border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-60 font-medium py-3 px-4 rounded-xl transition-colors"
                 >
-                  {downloading === 'preview-pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                  {previewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={async () => {
-                    setDownloading('cert');
-                    try { await downloadCertificate(id); } finally { setDownloading(null); }
-                  }}
-                  disabled={downloading === 'cert'}
-                  className="flex items-center justify-center gap-2 flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-3 px-4 rounded-xl transition-colors"
-                >
-                  {downloading === 'cert' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
-                  {downloading === 'cert' ? 'Descargando...' : 'Descargar Sumarium'}
-                </button>
-                <button
-                  onClick={async () => {
-                    setDownloading('preview-cert');
-                    try { await previewCertificate(id); } finally { setDownloading(null); }
-                  }}
-                  disabled={downloading === 'preview-cert'}
-                  title="Previsualizar Sumario"
-                  className="flex items-center justify-center gap-2 border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-60 font-medium py-3 px-4 rounded-xl transition-colors"
-                >
-                  {downloading === 'preview-cert' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+              {!isVital && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      setDownloading('cert');
+                      try { await downloadCertificate(id); } finally { setDownloading(null); }
+                    }}
+                    disabled={downloading === 'cert'}
+                    className="flex items-center justify-center gap-2 flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                  >
+                    {downloading === 'cert' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                    {downloading === 'cert' ? 'Descargando...' : 'Descargar Sumarium'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setDownloading('preview-cert');
+                      try { await previewCertificate(id); } finally { setDownloading(null); }
+                    }}
+                    disabled={downloading === 'preview-cert'}
+                    title="Previsualizar Sumario"
+                    className="flex items-center justify-center gap-2 border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-60 font-medium py-3 px-4 rounded-xl transition-colors"
+                  >
+                    {downloading === 'preview-cert' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              )}
 
               <input
                 ref={fileInputRef}
@@ -346,6 +371,12 @@ export default function SignatureDetail() {
           </div>
         </div>
       </div>
+
+      <Modal open={!!previewUrl} onClose={closePreview} title="Vista previa del documento firmado" maxWidth="max-w-3xl">
+        {previewUrl && (
+          <iframe src={previewUrl} title="Vista previa PDF" className="w-full h-[75vh] rounded-lg border border-gray-200" />
+        )}
+      </Modal>
     </Layout>
   );
 }
