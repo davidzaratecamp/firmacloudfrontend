@@ -6,6 +6,7 @@ import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES, BEEMO_ROLES, 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import SendDocument from './pages/SendDocument';
+import SendVitalDocument from './pages/SendVitalDocument';
 import SignatureList from './pages/SignatureList';
 import SignatureDetail from './pages/SignatureDetail';
 import SignPage from './pages/SignPage';
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
           <Route path="/dashboard" element={<RoleRoute roles={ALL_ROLES}><Dashboard /></RoleRoute>} />
           <Route path="/enviar" element={<RoleRoute roles={FIRMA_ROLES}><SendDocument /></RoleRoute>} />
+          <Route path="/enviar-vital" element={<RoleRoute roles={FIRMA_ROLES}><SendVitalDocument /></RoleRoute>} />
           <Route path="/firmas" element={<RoleRoute roles={FIRMA_ROLES}><SignatureList /></RoleRoute>} />
           <Route path="/firmas/:id" element={<RoleRoute roles={FIRMA_ROLES}><SignatureDetail /></RoleRoute>} />
           <Route path="/enviar-carta" element={<RoleRoute roles={CORREO_ROLES}><SendCarta /></RoleRoute>} />

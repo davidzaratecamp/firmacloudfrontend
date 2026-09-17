@@ -3,11 +3,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { FIRMA_ROLES, CORREO_ROLES, HR_ROLES, RECLUTAMIENTO_ROLES, BEEMO_ROLES, ALL_ROLES } from '../utils/roles';
-import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers, Users, Briefcase, ClipboardCheck, GraduationCap, Bot } from 'lucide-react';
+import { LayoutDashboard, FileText, SendHorizontal, LogOut, FileSignature, Menu, X, MailPlus, Inbox, Layers, Users, Briefcase, ClipboardCheck, GraduationCap, Bot, HeartPulse } from 'lucide-react';
 
 const NAV = [
   { to: '/dashboard',       label: 'Dashboard',        icon: LayoutDashboard, roles: ALL_ROLES    },
   { to: '/enviar',          label: 'Enviar Documento',  icon: SendHorizontal,  roles: FIRMA_ROLES  },
+  { to: '/enviar-vital',    label: 'Enviar Vital',      icon: HeartPulse,      roles: FIRMA_ROLES  },
   { to: '/firmas',          label: 'Firmas',            icon: FileText,        roles: FIRMA_ROLES  },
   { to: '/enviar-carta',    label: 'Enviar Carta',      icon: MailPlus,        roles: CORREO_ROLES },
   { to: '/cartas',          label: 'Cartas',            icon: Inbox,           roles: CORREO_ROLES },
