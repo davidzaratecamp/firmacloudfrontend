@@ -103,6 +103,7 @@ export default function SignatureDetail() {
   // descargar/visualizar sumario no tienen nada que mostrar — se ocultan.
   let isVital = false;
   try { isVital = sig.document_data ? JSON.parse(sig.document_data)._docKind === 'vital' : false; } catch { /* no es JSON válido, no es vital */ }
+  const listPath = isVital ? '/firmas-vital' : '/firmas';
 
   const handlePreview = async () => {
     setPreviewLoading(true);
@@ -124,7 +125,7 @@ export default function SignatureDetail() {
   return (
     <Layout>
       <div className="mb-6 flex items-center gap-4">
-        <Link to="/firmas" className="text-gray-400 hover:text-gray-600 transition-colors">
+        <Link to={listPath} className="text-gray-400 hover:text-gray-600 transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">
@@ -336,7 +337,7 @@ export default function SignatureDetail() {
                     setDeleting(true);
                     try {
                       await deleteSignature(id);
-                      navigate('/firmas');
+                      navigate(listPath);
                     } catch {
                       setDeleting(false);
                       setConfirmDelete(false);

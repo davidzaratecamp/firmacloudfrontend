@@ -10,6 +10,7 @@ const NAV = [
   { to: '/enviar',          label: 'Enviar Documento',  icon: SendHorizontal,  roles: FIRMA_ROLES  },
   { to: '/enviar-vital',    label: 'Enviar Vital',      icon: HeartPulse,      roles: FIRMA_ROLES  },
   { to: '/firmas',          label: 'Firmas',            icon: FileText,        roles: FIRMA_ROLES  },
+  { to: '/firmas-vital',    label: 'Firmas Vital',      icon: HeartPulse,      roles: FIRMA_ROLES  },
   { to: '/enviar-carta',    label: 'Enviar Carta',      icon: MailPlus,        roles: CORREO_ROLES },
   { to: '/cartas',          label: 'Cartas',            icon: Inbox,           roles: CORREO_ROLES },
   { to: '/oleadas',         label: 'Oleadas',           icon: Layers,          roles: CORREO_ROLES },
@@ -36,7 +37,10 @@ function SidebarContent({ user, location, onNavigate, onLogout }) {
       </div>
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {NAV.filter(({ roles }) => user?.role === 'admin' || roles.includes(user?.role)).map(({ to, label, icon: Icon }) => {
-          const active = location.pathname.startsWith(to);
+          // Coincidencia exacta o de subruta (no solo prefijo de string) — evita que rutas
+          // como "/firmas-vital" activen también el item "/firmas" (mismo problema existía
+          // entre "/enviar" y "/enviar-vital").
+          const active = location.pathname === to || location.pathname.startsWith(`${to}/`);
           return (
             <Link key={to} to={to} onClick={onNavigate}
               className={`relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${

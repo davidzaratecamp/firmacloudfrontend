@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import SendDocument from './pages/SendDocument';
 import SendVitalDocument from './pages/SendVitalDocument';
 import SignatureList from './pages/SignatureList';
+import SignatureVitalList from './pages/SignatureVitalList';
 import SignatureDetail from './pages/SignatureDetail';
 import SignPage from './pages/SignPage';
 import SendCarta from './pages/SendCarta';
@@ -64,6 +65,8 @@ export default function App() {
           <Route path="/enviar-vital" element={<RoleRoute roles={FIRMA_ROLES}><SendVitalDocument /></RoleRoute>} />
           <Route path="/firmas" element={<RoleRoute roles={FIRMA_ROLES}><SignatureList /></RoleRoute>} />
           <Route path="/firmas/:id" element={<RoleRoute roles={FIRMA_ROLES}><SignatureDetail /></RoleRoute>} />
+          <Route path="/firmas-vital" element={<RoleRoute roles={FIRMA_ROLES}><SignatureVitalList /></RoleRoute>} />
+          <Route path="/firmas-vital/:id" element={<RoleRoute roles={FIRMA_ROLES}><SignatureDetail /></RoleRoute>} />
           <Route path="/enviar-carta" element={<RoleRoute roles={CORREO_ROLES}><SendCarta /></RoleRoute>} />
           <Route path="/cartas" element={<RoleRoute roles={CORREO_ROLES}><CartaList /></RoleRoute>} />
           <Route path="/cartas/:id" element={<RoleRoute roles={CORREO_ROLES}><CartaDetail /></RoleRoute>} />
