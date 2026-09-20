@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sendDocument } from '../api/signatures';
 import Layout from '../components/Layout';
-import { Send, CheckCircle, Loader2, Mail, MessageCircle } from 'lucide-react';
+import { Send, CheckCircle, Loader2, Mail, MessageCircle, MessageSquare } from 'lucide-react';
 
 const CHANNELS = [
   { value: 'email',    label: 'Email',           icon: Mail          },
   { value: 'whatsapp', label: 'WhatsApp',         icon: MessageCircle },
+  { value: 'sms',      label: 'SMS',              icon: MessageSquare },
   { value: 'both',     label: 'Email + WhatsApp', icon: null          },
 ];
 
@@ -50,7 +51,7 @@ export default function SendDocument() {
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
   const needsEmail   = form.sendChannel === 'email'    || form.sendChannel === 'both';
-  const needsPhone   = form.sendChannel === 'whatsapp' || form.sendChannel === 'both';
+  const needsPhone   = form.sendChannel === 'whatsapp' || form.sendChannel === 'sms' || form.sendChannel === 'both';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,7 +119,7 @@ export default function SendDocument() {
             {/* Channel selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Canal de envío *</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {CHANNELS.map(ch => (
                   <button key={ch.value} type="button"
                     onClick={() => setForm(f => ({ ...f, sendChannel: ch.value }))}
@@ -163,7 +164,7 @@ export default function SendDocument() {
             {needsPhone && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Número de WhatsApp * <span className="text-xs text-gray-400">(elige el código de país)</span>
+                  {form.sendChannel === 'sms' ? 'Número de celular' : 'Número de WhatsApp'} * <span className="text-xs text-gray-400">(elige el código de país)</span>
                 </label>
                 <div className="flex gap-2">
                   <select

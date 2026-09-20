@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sendVitalDocument } from '../api/signatures';
 import Layout from '../components/Layout';
-import { Send, CheckCircle, Loader2, Mail, MessageCircle, User, Briefcase, Home, FileSpreadsheet } from 'lucide-react';
+import { Send, CheckCircle, Loader2, Mail, MessageCircle, MessageSquare, User, Briefcase, Home, FileSpreadsheet } from 'lucide-react';
 
 const CHANNELS = [
   { value: 'email',    label: 'Email',           icon: Mail          },
   { value: 'whatsapp', label: 'WhatsApp',         icon: MessageCircle },
+  { value: 'sms',      label: 'SMS',              icon: MessageSquare },
   { value: 'both',     label: 'Email + WhatsApp', icon: null          },
 ];
 
@@ -101,7 +102,7 @@ export default function SendVitalDocument() {
   const navigate = useNavigate();
 
   const needsEmail = sendChannel === 'email'    || sendChannel === 'both';
-  const needsPhone = sendChannel === 'whatsapp' || sendChannel === 'both';
+  const needsPhone = sendChannel === 'whatsapp' || sendChannel === 'sms' || sendChannel === 'both';
 
   const setField = (key) => (e) => setVital(v => ({ ...v, [key]: e.target.value }));
 
@@ -185,7 +186,7 @@ export default function SendVitalDocument() {
             <Section icon={User} title="Cliente y canal de envío">
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Canal de envío *</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {CHANNELS.map(ch => (
                     <button key={ch.value} type="button"
                       onClick={() => setSendChannel(ch.value)}
@@ -217,7 +218,7 @@ export default function SendVitalDocument() {
               {needsPhone && (
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Número de WhatsApp * <span className="text-xs text-gray-400">(elige el código de país)</span>
+                    {sendChannel === 'sms' ? 'Número de celular' : 'Número de WhatsApp'} * <span className="text-xs text-gray-400">(elige el código de país)</span>
                   </label>
                   <div className="flex gap-2">
                     <select value={countryCode} onChange={e => setCountryCode(e.target.value)}
