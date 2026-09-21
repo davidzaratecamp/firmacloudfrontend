@@ -205,7 +205,7 @@ export default function SignPage() {
           )}
           <FileSignature className="h-5 w-5 text-blue-300" />
           <div>
-            <span className="text-white font-bold text-sm">Asiste Health Care</span>
+            <span className="text-white font-bold text-sm">{pageData?.isVital ? 'Vital Health Insurance' : 'Asiste Health Care'}</span>
             <span className="text-blue-400 text-xs ml-2">Firma Digital</span>
           </div>
         </div>
@@ -378,12 +378,25 @@ export default function SignPage() {
               </div>
               {showErsd && (
                 <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 max-h-44 overflow-y-auto text-xs text-gray-600 space-y-2.5">
-                  <p className="font-semibold text-gray-800">ELECTRONIC RECORD AND SIGNATURE DISCLOSURE — Asiste Health Care</p>
-                  <p>Asiste Health Care may be required by law to provide you certain written notices or disclosures electronically through the Asiste Health Care system.</p>
-                  <p><span className="font-medium">Getting paper copies:</span> At any time, you may request a paper copy of any record provided electronically by contacting admin@asistehealth.com.</p>
-                  <p><span className="font-medium">Withdrawing your consent:</span> You may at any time request to receive notices in paper format by emailing admin@asistehealth.com with your full name, email, and mailing address.</p>
-                  <p><span className="font-medium">Legal effect:</span> Your electronic signature has the same legal effect as a handwritten signature under the U.S. Electronic Signatures in Global and National Commerce Act (E-SIGN Act) and the Uniform Electronic Transactions Act (UETA).</p>
-                  <p><span className="font-medium">Contact:</span> admin@asistehealth.com</p>
+                  {pageData?.isVital ? (
+                    <>
+                      <p className="font-semibold text-gray-800">ELECTRONIC RECORD AND SIGNATURE DISCLOSURE — Vital Health Insurance</p>
+                      <p>Vital Health Insurance may be required by law to provide you certain written notices or disclosures electronically through the Vital Health Insurance system.</p>
+                      <p><span className="font-medium">Getting paper copies:</span> At any time, you may request a paper copy of any record provided electronically by contacting soporte@firmahealthcare.com.</p>
+                      <p><span className="font-medium">Withdrawing your consent:</span> You may at any time request to receive notices in paper format by emailing soporte@firmahealthcare.com with your full name, email, and mailing address.</p>
+                      <p><span className="font-medium">Legal effect:</span> Your electronic signature has the same legal effect as a handwritten signature under the U.S. Electronic Signatures in Global and National Commerce Act (E-SIGN Act) and the Uniform Electronic Transactions Act (UETA).</p>
+                      <p><span className="font-medium">Contact:</span> soporte@firmahealthcare.com</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-gray-800">ELECTRONIC RECORD AND SIGNATURE DISCLOSURE — Asiste Health Care</p>
+                      <p>Asiste Health Care may be required by law to provide you certain written notices or disclosures electronically through the Asiste Health Care system.</p>
+                      <p><span className="font-medium">Getting paper copies:</span> At any time, you may request a paper copy of any record provided electronically by contacting admin@asistehealth.com.</p>
+                      <p><span className="font-medium">Withdrawing your consent:</span> You may at any time request to receive notices in paper format by emailing admin@asistehealth.com with your full name, email, and mailing address.</p>
+                      <p><span className="font-medium">Legal effect:</span> Your electronic signature has the same legal effect as a handwritten signature under the U.S. Electronic Signatures in Global and National Commerce Act (E-SIGN Act) and the Uniform Electronic Transactions Act (UETA).</p>
+                      <p><span className="font-medium">Contact:</span> admin@asistehealth.com</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
