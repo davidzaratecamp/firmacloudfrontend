@@ -53,6 +53,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/firmar/:token" element={<SignPage />} />
+          <Route path="/firmar-vital/:token" element={<SignPage />} />
           <Route path="/formulario/:token" element={<FormularioPublico />} />
           <Route path="/actualizar-datos" element={<ActualizarDatosPublico />} />
           <Route path="/actualizar-datos/:npnSlug" element={<ActualizarDatosPublico />} />
